@@ -350,18 +350,25 @@
                     if (payment.error_details) {
                         displayErrorDetails(payment.error_details);
                     }
-                } else {
-                    showBasicError('Could not load payment details.');
-                    // Still show basic order ID
+                } else if (data.error) {
+                    // Backend returned an error (e.g., order not found)
+                    showBasicError(`Could not load payment details: ${data.error}`);
                     document.getElementById('orderId').textContent = orderId;
+                    document.getElementById('orderDetails').style.display = 'block';
+                } else {
+                    // No payment data found - show basic info
+                    showBasicError('Payment details not found. This may be a test order or the payment was not processed.');
+                    document.getElementById('orderId').textContent = orderId;
+                    document.getElementById('timestamp').textContent = new Date().toLocaleString();
                     document.getElementById('orderDetails').style.display = 'block';
                 }
                 
             } catch (error) {
                 console.error('Error loading payment details:', error);
-                showBasicError('Failed to load payment details.');
-                // Still show basic order ID
+                showBasicError('Failed to load payment details from server.');
+                // Still show basic order ID and timestamp
                 document.getElementById('orderId').textContent = orderId;
+                document.getElementById('timestamp').textContent = new Date().toLocaleString();
                 document.getElementById('orderDetails').style.display = 'block';
             } finally {
                 document.getElementById('loadingDetails').style.display = 'none';
@@ -448,11 +455,21 @@
 
         function showBasicError(message) {
             console.error(message);
+            
             // Show basic error info from URL if details can't be loaded
             if (errorMessage) {
                 const errorContainer = document.getElementById('errorDetails');
                 const errorDescription = document.getElementById('errorDescription');
-                errorDescription.innerHTML = `<p>${decodeURIComponent(errorMessage)}</p>`;
+                errorDescription.innerHTML = `
+                    <p><strong>Error Message:</strong> ${decodeURIComponent(errorMessage)}</p>
+                    <p><strong>System Message:</strong> ${message}</p>
+                `;
+                errorContainer.style.display = 'block';
+            } else {
+                // Show system message in error details
+                const errorContainer = document.getElementById('errorDetails');
+                const errorDescription = document.getElementById('errorDescription');
+                errorDescription.innerHTML = `<p><strong>System Message:</strong> ${message}</p>`;
                 errorContainer.style.display = 'block';
             }
         }
