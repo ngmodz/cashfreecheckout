@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CashFree SDK Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 CashFree SDK Test Page</h1>
+        <p>This page tests if the CashFree SDK loads correctly.</p>
+        
+        <div id="status" class="info">⏳ Testing SDK...</div>
+        
+        <div>
+            <button id="testBtn" class="btn" onclick="testSDK()" disabled>Test SDK Functions</button>
+            <button class="btn" onclick="clearLog()">Clear Log</button>
+        </div>
+        
+        <h3>Console Log:</h3>
+        <div id="log"></div>
+    </div>
+
+    <!-- CashFree SDK v3 -->
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+    
+    <script>
+        let logContainer = document.getElementById('log');
+        let statusDiv = document.getElementById('status');
+        let testBtn = document.getElementById('testBtn');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            logContainer.textContent += logEntry;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            console.log(message);
+        }
+
+        function updateStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function clearLog() {
+            logContainer.textContent = '';
+        }
+
+        // Test SDK loading
+        function waitForSDK() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 30;
+                
+                const checkSDK = () => {
+                    attempts++;
+                    log(`Attempt ${attempts}/${maxAttempts}: Checking for CashFree SDK...`);
+                    
+                    if (typeof Cashfree !== 'undefined') {
+                        log('✅ Cashfree object found!');
+                        
+                        if (typeof Cashfree === 'function') {
+                            log('✅ Cashfree is a function (v3 SDK)');
+                            resolve('v3');
+                        } else if (Cashfree.Checkout) {
+                            log('✅ Cashfree.Checkout found (v3 SDK)');
+                            resolve('v3');
+                        } else {
+                            log('⚠️ Cashfree object found but structure unknown');
+                            resolve('unknown');
+                        }
+                    } else if (typeof CFClient !== 'undefined') {
+                        log('✅ CFClient found (v2 SDK)');
+                        resolve('v2');
+                    } else if (attempts < maxAttempts) {
+                        setTimeout(checkSDK, 200);
+                    } else {
+                        log('❌ SDK not found after maximum attempts');
+                        reject(new Error('SDK not found'));
+                    }
+                };
+                
+                checkSDK();
+            });
+        }
+
+        function testSDK() {
+            log('🧪 Testing SDK functions...');
+            
+            try {
+                if (typeof Cashfree === 'function') {
+                    log('Testing Cashfree function...');
+                    const cf = Cashfree({ mode: 'sandbox' });
+                    log('✅ Cashfree function works!');
+                    log('SDK object: ' + JSON.stringify(Object.keys(cf || {})));
+                } else {
+                    log('❌ Cashfree is not a function');
+                }
+            } catch (error) {
+                log('❌ Error testing SDK: ' + error.message);
+            }
+        }
+
+        // Initialize test
+        async function initialize() {
+            log('🚀 Starting CashFree SDK test...');
+            updateStatus('⏳ Loading SDK...', 'warning');
+            
+            try {
+                const sdkVersion = await waitForSDK();
+                log(`✅ SDK loaded successfully! Version: ${sdkVersion}`);
+                updateStatus(`✅ SDK Loaded (${sdkVersion})`, 'success');
+                testBtn.disabled = false;
+                
+                // Auto-test
+                testSDK();
+                
+            } catch (error) {
+                log('❌ Failed to load SDK: ' + error.message);
+                updateStatus('❌ SDK Failed to Load', 'error');
+            }
+        }
+
+        // Start the test
+        window.addEventListener('load', initialize);
+        
+        // Log any global errors
+        window.addEventListener('error', (event) => {
+            log('❌ Global Error: ' + event.error.message);
+        });
+    </script>
+</body>
+</html>

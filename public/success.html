@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success - CashFree Checkout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .success-icon {
+            font-size: 80px;
+            color: #28a745;
+            margin-bottom: 30px;
+            animation: checkmark 0.6s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+
+        .order-details h3 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .amount {
+            font-size: 1.5rem;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .credit-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            font-weight: bold;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .credit-update {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 20px;
+            }
+            
+            .success-title {
+                font-size: 2rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✅</div>
+        <h1 class="success-title">Payment Successful!</h1>
+        <p class="success-message">
+            Thank you for your payment. Your transaction has been processed successfully.
+            You will receive a confirmation email shortly.
+        </p>
+
+        <!-- Credit Badge -->
+        <div class="credit-badge" id="creditBadge">
+            💰 Credits: <span id="creditCount">Loading...</span>
+        </div>
+
+        <!-- Credit Update Message -->
+        <div class="credit-update" id="creditUpdate" style="display: none;">
+            🎉 +1 Credit Added! Your total credits: <span id="newCreditCount">0</span>
+        </div>
+
+        <div class="loading" id="loadingDetails">
+            <div class="spinner"></div>
+            <p>Loading payment details...</p>
+        </div>
+
+        <div class="order-details" id="orderDetails" style="display: none;">
+            <h3>Transaction Details</h3>
+            <div class="detail-row">
+                <span class="detail-label">Order ID:</span>
+                <span class="detail-value" id="orderId">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Transaction ID:</span>
+                <span class="detail-value" id="transactionId">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount:</span>
+                <span class="detail-value amount" id="amount">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Payment Method:</span>
+                <span class="detail-value" id="paymentMethod">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status:</span>
+                <span class="status" id="status">Success</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date & Time:</span>
+                <span class="detail-value" id="timestamp">-</span>
+            </div>
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+
+        <div class="actions">
+            <a href="/" class="btn btn-primary">Make Another Payment</a>
+            <button class="btn btn-secondary" onclick="window.print()">Print Receipt</button>
+        </div>
+    </div>
+
+    <script>
+        // Get order ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id');
+
+        // Load payment details on page load
+        if (orderId) {
+            loadPaymentDetails(orderId);
+        } else {
+            showError('Order ID not found in URL');
+        }
+
+        async function loadPaymentDetails(orderId) {
+            try {
+                document.getElementById('loadingDetails').style.display = 'block';
+                
+                const response = await fetch(`/api/payment/status/${orderId}`);
+                const data = await response.json();
+                
+                console.log('Payment status response:', data);
+                
+                if (data.success && data.payments && data.payments.length > 0) {
+                    const payment = data.payments[0]; // Get the first (latest) payment
+                    displayPaymentDetails(orderId, payment);
+                } else {
+                    showError('Could not load payment details. Please contact support if needed.');
+                    // Still show basic order ID
+                    document.getElementById('orderId').textContent = orderId;
+                    document.getElementById('orderDetails').style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error loading payment details:', error);
+                showError('Failed to load payment details. Please contact support if needed.');
+                // Still show basic order ID
+                document.getElementById('orderId').textContent = orderId;
+                document.getElementById('orderDetails').style.display = 'block';
+            } finally {
+                document.getElementById('loadingDetails').style.display = 'none';
+            }
+        }
+
+        function displayPaymentDetails(orderId, payment) {
+            document.getElementById('orderId').textContent = orderId;
+            document.getElementById('transactionId').textContent = payment.cf_payment_id || payment.payment_id || 'N/A';
+            document.getElementById('amount').textContent = '₹' + (payment.payment_amount || 'N/A');
+            document.getElementById('paymentMethod').textContent = formatPaymentMethod(payment.payment_method);
+            
+            // Format timestamp
+            if (payment.payment_time) {
+                const date = new Date(payment.payment_time);
+                document.getElementById('timestamp').textContent = date.toLocaleString();
+            } else {
+                document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            }
+            
+            // Update status based on payment status
+            const statusElement = document.getElementById('status');
+            if (payment.payment_status) {
+                statusElement.textContent = payment.payment_status.charAt(0).toUpperCase() + payment.payment_status.slice(1);
+                
+                // Update status styling based on payment status
+                if (payment.payment_status.toLowerCase() === 'success') {
+                    statusElement.style.background = '#28a745';
+                } else if (payment.payment_status.toLowerCase() === 'pending') {
+                    statusElement.style.background = '#ffc107';
+                    statusElement.style.color = '#212529';
+                } else if (payment.payment_status.toLowerCase() === 'failed') {
+                    statusElement.style.background = '#dc3545';
+                }
+            }
+            
+            document.getElementById('orderDetails').style.display = 'block';
+        }
+
+        function formatPaymentMethod(method) {
+            if (!method) return 'N/A';
+            
+            const methodMap = {
+                'cc': 'Credit Card',
+                'dc': 'Debit Card',
+                'nb': 'Net Banking',
+                'upi': 'UPI',
+                'wallet': 'Digital Wallet',
+                'emi': 'EMI',
+                'paylater': 'Pay Later'
+            };
+            
+            return methodMap[method.toLowerCase()] || method.toUpperCase();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('loadingDetails').style.display = 'none';
+        }
+
+        // Auto-refresh page after 30 seconds if payment details couldn't be loaded
+        setTimeout(() => {
+            const orderDetails = document.getElementById('orderDetails');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (orderDetails.style.display === 'none' && errorMessage.style.display === 'block') {
+                console.log('Refreshing page to retry loading payment details...');
+                location.reload();
+            }
+        }, 30000);
+
+        // Credit Management Functions
+        async function loadCredits() {
+            try {
+                const response = await fetch('/api/payment/credits');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('creditCount').textContent = data.totalCredits;
+                    
+                    // Show credit update message
+                    const creditUpdate = document.getElementById('creditUpdate');
+                    const newCreditCount = document.getElementById('newCreditCount');
+                    newCreditCount.textContent = data.totalCredits;
+                    creditUpdate.style.display = 'block';
+                    
+                    console.log('Credits loaded:', data.totalCredits);
+                }
+            } catch (error) {
+                console.error('Error loading credits:', error);
+                document.getElementById('creditCount').textContent = 'Error';
+            }
+        }
+
+        // Load credits on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load credits immediately
+            loadCredits();
+            
+            // Also load credits after a delay to ensure payment processing is complete
+            setTimeout(loadCredits, 2000);
+        });
+    </script>
+</body>
+</html>

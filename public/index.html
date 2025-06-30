@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CashFree Popup Checkout Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .amount-input {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            color: #667eea;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-top: 20px;
+        }
+
+        .pay-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .pay-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .environment-badge {
+            display: inline-block;
+            background: #ffd700;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .features {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            color: #666;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .credit-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .credit-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .credit-number {
+            font-size: 1.2em;
+            margin-left: 5px;
+        }
+
+        .credit-loading {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .credit-popup {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+            z-index: 1001;
+            display: none;
+        }
+
+        .credit-popup h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+
+        .payment-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .payment-amount {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .payment-date {
+            color: #666;
+            font-size: 0.8em;
+        }
+
+        .reset-credits {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .credit-display {
+                top: 10px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+            
+            .credit-popup {
+                top: 60px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="environment-badge" id="environmentBadge">SANDBOX MODE</div>
+            <h1>🏪 Checkout</h1>
+            <p>Secure payment powered by CashFree</p>
+        </div>
+
+        <!-- Credit Display -->
+        <div class="credit-display" id="creditDisplay" onclick="toggleCreditPopup()">
+            💰 Credits: <span class="credit-number" id="creditCount">0</span>
+        </div>
+
+        <!-- Credit Details Popup -->
+        <div class="credit-popup" id="creditPopup">
+            <h3>Payment History</h3>
+            <div id="paymentHistory">
+                <p>No payments yet</p>
+            </div>
+            <button class="reset-credits" onclick="resetCredits()">Reset Credits</button>
+        </div>
+
+        <div class="features">
+            <h3>Payment Features:</h3>
+            <ul>
+                <li>Credit & Debit Cards</li>
+                <li>Net Banking</li>
+                <li>UPI Payments</li>
+                <li>Digital Wallets</li>
+                <li>EMI Options</li>
+                <li>Pay Later</li>
+            </ul>
+        </div>
+
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="amount">Amount (₹)</label>
+                <input type="number" id="amount" name="amount" class="amount-input" value="100" min="1" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="customerName">Full Name</label>
+                <input type="text" id="customerName" name="customerName" value="John Doe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="customerEmail">Email Address</label>
+                <input type="email" id="customerEmail" name="customerEmail" value="john.doe@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="customerPhone">Phone Number</label>
+                <input type="tel" id="customerPhone" name="customerPhone" value="9999999999" pattern="[0-9]{10}" required>
+            </div>
+
+            <button type="submit" class="pay-button" id="payButton">
+                Pay Now with CashFree
+            </button>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            Processing your payment...
+        </div>
+
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+    </div>
+
+    <!-- CashFree SDK with multiple fallbacks -->
+    <script>
+        // Try to load SDK with multiple fallback URLs
+        (function loadCashFreeSDK() {
+            const sdkUrls = [
+                'https://sdk.cashfree.com/js/v3/cashfree.js',
+                'https://sdk.cashfree.com/js/ui/2.0.0/cashfree.sandbox.js',
+                'https://cdn.jsdelivr.net/npm/@cashfreepayments/cashfree-js@latest/dist/cashfree.js',
+                './cashfree-backup.js' // Local backup
+            ];
+            
+            let currentIndex = 0;
+            
+            function tryLoadSDK(url) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = () => {
+                        console.log('✅ SDK loaded from:', url);
+                        resolve(url);
+                    };
+                    script.onerror = () => {
+                        console.warn('❌ Failed to load SDK from:', url);
+                        reject(new Error('Failed to load from ' + url));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+            
+            async function loadWithFallback() {
+                for (let i = 0; i < sdkUrls.length; i++) {
+                    try {
+                        await tryLoadSDK(sdkUrls[i]);
+                        window.sdkLoadedFrom = sdkUrls[i];
+                        
+                        // If it's the backup, set a flag
+                        if (sdkUrls[i].includes('backup')) {
+                            window.usingBackupSDK = true;
+                        }
+                        return;
+                    } catch (error) {
+                        console.warn(`SDK loading attempt ${i + 1} failed:`, error.message);
+                        if (i === sdkUrls.length - 1) {
+                            console.error('❌ All SDK loading attempts failed');
+                            window.sdkLoadFailed = true;
+                        }
+                    }
+                }
+            }
+            
+            loadWithFallback();
+        })();
+    </script>
+    
+    <script>
+        // Initialize CashFree
+        let cashfree;
+        let currentEnvironment = 'SANDBOX';
+        let sdkLoaded = false;
+        let sdkVersion = null;
+
+        // Wait for SDK to load with multiple fallbacks
+        function waitForSDK() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 50;
+                
+                const checkSDK = () => {
+                    attempts++;
+                    console.log(`⏳ Waiting for SDK... Attempt ${attempts}/${maxAttempts}`);
+                    
+                    // Check if SDK load failed completely
+                    if (window.sdkLoadFailed) {
+                        reject(new Error('All SDK loading attempts failed. Please check your internet connection.'));
+                        return;
+                    }
+                    
+                    // Check for v3 SDK
+                    if (typeof Cashfree !== 'undefined') {
+                        console.log('✅ CashFree v3 SDK detected');
+                        sdkVersion = 'v3';
+                        sdkLoaded = true;
+                        resolve();
+                        return;
+                    }
+                    
+                    // Check for v2 SDK
+                    if (typeof CFClient !== 'undefined') {
+                        console.log('✅ CashFree v2 SDK detected');
+                        sdkVersion = 'v2';
+                        sdkLoaded = true;
+                        resolve();
+                        return;
+                    }
+                    
+                    // Check for backup SDK
+                    if (typeof CashfreeBackup !== 'undefined') {
+                        console.log('✅ CashFree backup SDK detected');
+                        sdkVersion = 'backup';
+                        sdkLoaded = true;
+                        resolve();
+                        return;
+                    }
+                    
+                    // Continue waiting
+                    if (attempts < maxAttempts) {
+                        setTimeout(checkSDK, 200);
+                    } else {
+                        reject(new Error('CashFree SDK failed to load after maximum attempts. Please refresh the page.'));
+                    }
+                };
+                
+                // Start checking immediately
+                checkSDK();
+            });
+        }
+
+        // Initialize the SDK based on version detected
+        async function initializeCashFree(environment) {
+            try {
+                console.log('🔄 Initializing CashFree SDK...');
+                
+                if (!sdkLoaded) {
+                    await waitForSDK();
+                }
+                
+                console.log(`🚀 Using CashFree ${sdkVersion} SDK`);
+                console.log('🔗 SDK loaded from:', window.sdkLoadedFrom || 'initial script tag');
+                
+                if (sdkVersion === 'v3') {
+                    // Initialize v3 SDK
+                    cashfree = Cashfree({
+                        mode: environment === 'PRODUCTION' ? 'production' : 'sandbox'
+                    });
+                } else if (sdkVersion === 'v2') {
+                    // Initialize v2 SDK
+                    cashfree = new CFClient();
+                } else if (sdkVersion === 'backup') {
+                    // Use backup SDK
+                    cashfree = window.CashfreeBackup;
+                    console.log('⚠️ Using backup SDK - payments will redirect to CashFree website');
+                } else {
+                    throw new Error('Unknown SDK version');
+                }
+                
+                console.log('✅ CashFree SDK initialized successfully in', environment, 'mode');
+                
+                // Update environment badge
+                const badge = document.getElementById('environmentBadge');
+                if (badge) {
+                    badge.textContent = `${environment} MODE (${sdkVersion})`;
+                    badge.style.background = environment === 'PRODUCTION' ? '#dc3545' : '#ffd700';
+                }
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize CashFree SDK:', error);
+                showError('Payment system initialization failed: ' + error.message);
+                return false;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Starting CashFree integration...');
+            
+            // Show loading status
+            const badge = document.getElementById('environmentBadge');
+            if (badge) {
+                badge.textContent = 'LOADING SDK...';
+                badge.style.background = '#ffc107';
+            }
+            
+            try {
+                const success = await initializeCashFree(currentEnvironment);
+                if (!success) {
+                    showError('Failed to initialize payment system. Please refresh the page or check your internet connection.');
+                }
+            } catch (error) {
+                console.error('❌ Initialization failed:', error);
+                showError('Failed to load payment system: ' + error.message);
+            }
+        });
+
+        // Form submission handler
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const paymentData = {
+                amount: formData.get('amount'),
+                customerName: formData.get('customerName'),
+                customerEmail: formData.get('customerEmail'),
+                customerPhone: formData.get('customerPhone')
+            };
+            
+            // Validate form
+            if (!paymentData.amount || !paymentData.customerName || !paymentData.customerEmail || !paymentData.customerPhone) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            if (parseFloat(paymentData.amount) < 1) {
+                showError('Amount must be at least ₹1');
+                return;
+            }
+            
+            await processPayment(paymentData);
+        });
+
+        async function processPayment(paymentData) {
+            try {
+                showLoading(true);
+                hideMessages();
+                
+                console.log('💳 Processing payment with data:', paymentData);
+                
+                // Check if SDK is ready
+                if (!cashfree) {
+                    console.log('🔄 SDK not ready, attempting to initialize...');
+                    const initialized = await initializeCashFree(currentEnvironment);
+                    if (!initialized) {
+                        throw new Error('Payment system not ready. Please refresh the page.');
+                    }
+                }
+                
+                // Step 1: Create order
+                console.log('📦 Creating order...');
+                const response = await fetch('/api/payment/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                const responseText = await response.text();
+                console.log('📡 Raw server response:', responseText);
+                
+                let orderData;
+                try {
+                    orderData = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('❌ Failed to parse server response:', parseError);
+                    throw new Error('Server returned invalid response: ' + responseText);
+                }
+                
+                console.log('📋 Parsed order data:', orderData);
+                
+                if (!orderData.success) {
+                    console.error('❌ Order creation failed:', orderData);
+                    throw new Error(orderData.error || 'Failed to create order: ' + (orderData.details || 'Unknown error'));
+                }
+                
+                if (!orderData.payment_session_id) {
+                    console.error('❌ No payment session ID received:', orderData);
+                    throw new Error('Invalid order response: missing payment session ID');
+                }
+                
+                // Update environment if different
+                if (orderData.environment !== currentEnvironment) {
+                    currentEnvironment = orderData.environment;
+                    console.log('🔄 Environment changed to:', currentEnvironment);
+                    await initializeCashFree(currentEnvironment);
+                }
+                
+                // Step 2: Configure checkout options based on SDK version
+                let checkoutOptions;
+                
+                if (sdkVersion === 'v3') {
+                    checkoutOptions = {
+                        paymentSessionId: orderData.payment_session_id,
+                        redirectTarget: "_modal",
+                        appearance: {
+                            rebrandly: false
+                        },
+                        onSuccess: function(data) {
+                            console.log('✅ v3 Payment successful:', data);
+                        },
+                        onFailure: function(data) {
+                            console.log('❌ v3 Payment failed:', data);
+                        }
+                    };
+                } else if (sdkVersion === 'v2') {
+                    checkoutOptions = {
+                        paymentSessionId: orderData.payment_session_id,
+                        returnUrl: window.location.origin + '/success?order_id=' + orderData.order_id
+                    };
+                } else if (sdkVersion === 'backup') {
+                    checkoutOptions = {
+                        paymentSessionId: orderData.payment_session_id
+                    };
+                }
+                
+                console.log(`🚀 Opening CashFree ${sdkVersion} checkout with options:`, checkoutOptions);
+                
+                // Step 3: Open CashFree checkout based on SDK version
+                let result;
+                
+                if (sdkVersion === 'v3') {
+                    try {
+                        // For v3 SDK, we need to handle the response properly
+                        result = await new Promise((resolve, reject) => {
+                            // Set up event listeners for popup events
+                            let paymentCompleted = false;
+                            
+                            // Override the success/failure callbacks
+                            checkoutOptions.onSuccess = function(data) {
+                                console.log('✅ v3 Payment successful:', data);
+                                paymentCompleted = true;
+                                resolve({ paymentDetails: data, success: true });
+                            };
+                            
+                            checkoutOptions.onFailure = function(data) {
+                                console.log('❌ v3 Payment failed:', data);
+                                paymentCompleted = true;
+                                resolve({ error: data, success: false });
+                            };
+                            
+                            // Set a timeout to handle cases where the popup is stuck
+                            const timeoutId = setTimeout(() => {
+                                if (!paymentCompleted) {
+                                    console.log('⏰ Payment timeout - checking status...');
+                                    resolve({ timeout: true });
+                                }
+                            }, 120000); // 2 minutes timeout
+                            
+                            // Start the checkout
+                            cashfree.checkout(checkoutOptions).then((checkoutResult) => {
+                                clearTimeout(timeoutId);
+                                if (!paymentCompleted) {
+                                    console.log('🔄 Checkout completed, result:', checkoutResult);
+                                    // If no callback was triggered, check the result
+                                    if (checkoutResult && checkoutResult.error) {
+                                        resolve({ error: checkoutResult.error, success: false });
+                                    } else {
+                                        resolve({ checkoutResult: checkoutResult });
+                                    }
+                                }
+                            }).catch((error) => {
+                                clearTimeout(timeoutId);
+                                if (!paymentCompleted) {
+                                    console.error('❌ Checkout error:', error);
+                                    resolve({ error: error, success: false });
+                                }
+                            });
+                        });
+                    } catch (error) {
+                        console.error('❌ v3 SDK Error:', error);
+                        result = { error: error, success: false };
+                    }
+                } else if (sdkVersion === 'v2') {
+                    // For v2, we need to handle it differently
+                    result = await new Promise((resolve, reject) => {
+                        cashfree.checkout(checkoutOptions, {
+                            onSuccess: (data) => {
+                                console.log('✅ v2 Payment successful:', data);
+                                resolve({ paymentDetails: data, success: true });
+                            },
+                            onFailure: (error) => {
+                                console.error('❌ v2 Payment failed:', error);
+                                resolve({ error: error, success: false });
+                            }
+                        });
+                    });
+                } else if (sdkVersion === 'backup') {
+                    // For backup, just redirect
+                    result = await cashfree.checkout(checkoutOptions);
+                    // The backup will redirect, so we won't reach here normally
+                }
+                
+                console.log('✅ Checkout completed with result:', result);
+                
+                // Handle timeout case
+                if (result && result.timeout) {
+                    console.log('⏰ Payment timed out, verifying status...');
+                    await verifyAndHandlePayment(orderData.order_id);
+                    return;
+                }
+                
+                // Handle explicit failure
+                if (result && result.success === false) {
+                    console.log('❌ Payment explicitly failed');
+                    await handlePaymentFailure(orderData.order_id, result.error || { message: 'Payment was cancelled or failed' });
+                    return;
+                }
+                
+                // Handle payment result based on success/failure
+                if (result && result.error && !result.success) {
+                    console.error('❌ Payment failed:', result.error);
+                    await handlePaymentFailure(orderData.order_id, result.error);
+                    return;
+                }
+                
+                // Handle successful payment completion
+                if (result && result.paymentDetails && result.success) {
+                    console.log('💰 Payment details received:', result.paymentDetails);
+                    await handlePaymentSuccess(orderData.order_id, result.paymentDetails);
+                } else if (result && result.redirect) {
+                    console.log('ℹ️ Redirecting to CashFree...');
+                    // Don't do anything, the backup SDK handles the redirect
+                } else if (result && result.checkoutResult) {
+                    console.log('ℹ️ Payment completed with checkout result, verifying status...');
+                    // For v3 SDK when no clear success/failure, verify payment status
+                    await verifyAndHandlePayment(orderData.order_id);
+                } else {
+                    console.log('ℹ️ Payment completed, verifying status...');
+                    // Default case - verify payment status
+                    await verifyAndHandlePayment(orderData.order_id);
+                }
+                
+            } catch (error) {
+                console.error('❌ Payment error:', error);
+                
+                // Force close any stuck modals
+                forceClosePaymentModal();
+                
+                let userMessage = 'Payment processing failed. ';
+                
+                if (error.message.includes('network') || error.message.includes('fetch')) {
+                    userMessage += 'Please check your internet connection and try again.';
+                } else if (error.message.includes('SDK') || error.message.includes('initialize')) {
+                    userMessage += 'Please refresh the page and try again.';
+                } else if (error.message.includes('credentials') || error.message.includes('configured')) {
+                    userMessage += 'Payment system configuration error. Please contact support.';
+                } else {
+                    userMessage += error.message || 'Please try again or contact support.';
+                }
+                
+                showError(userMessage);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function handlePaymentSuccess(orderId, paymentDetails) {
+            try {
+                console.log('✅ Payment successful:', paymentDetails);
+                
+                // Verify payment status
+                const statusResponse = await fetch(`/api/payment/status/${orderId}`);
+                const statusData = await statusResponse.json();
+                
+                console.log('Payment status:', statusData);
+                
+                if (statusData.success && statusData.payments && statusData.payments.length > 0) {
+                    const payment = statusData.payments[0];
+                    if (payment.payment_status === 'SUCCESS') {
+                        showSuccess('✅ Payment completed successfully! +1 Credit added. Redirecting...');
+                        
+                        // Refresh credits immediately
+                        setTimeout(() => {
+                            loadCredits();
+                        }, 500);
+                        
+                        // Redirect to success page after 2 seconds
+                        setTimeout(() => {
+                            window.location.href = `/success?order_id=${orderId}`;
+                        }, 2000);
+                        return;
+                    }
+                }
+                
+                // If we reach here, payment verification failed
+                showError('Payment verification failed. Please contact support if amount was deducted.');
+                
+            } catch (error) {
+                console.error('Error verifying payment:', error);
+                showError('Payment may have been successful, but verification failed. Please check your email or contact support.');
+            }
+        }
+
+        function forceClosePaymentModal() {
+            try {
+                // Try to close any CashFree modals
+                const modals = document.querySelectorAll('[id*="cashfree"], [class*="cashfree"], [class*="modal"], .cf-modal, #cf-checkout');
+                modals.forEach(modal => {
+                    if (modal && modal.style) {
+                        modal.style.display = 'none';
+                        modal.remove();
+                    }
+                });
+                
+                // Remove any backdrop overlays
+                const overlays = document.querySelectorAll('.modal-backdrop, .cf-backdrop, [class*="backdrop"]');
+                overlays.forEach(overlay => {
+                    if (overlay && overlay.style) {
+                        overlay.style.display = 'none';
+                        overlay.remove();
+                    }
+                });
+                
+                // Reset body styles that might be modified by modals
+                document.body.style.overflow = 'auto';
+                document.body.classList.remove('modal-open');
+                
+                console.log('🔒 Force closed payment modal');
+            } catch (error) {
+                console.error('Error force closing modal:', error);
+            }
+        }
+
+        async function handlePaymentFailure(orderId, error) {
+            try {
+                console.log('❌ Payment failed for order:', orderId, 'Error:', error);
+                
+                // Force close any stuck modals
+                forceClosePaymentModal();
+                
+                // Show immediate feedback to user
+                showError('❌ Payment failed. Verifying status...');
+                
+                // Verify the actual payment status to be sure
+                const statusResponse = await fetch(`/api/payment/status/${orderId}`);
+                const statusData = await statusResponse.json();
+                
+                console.log('Failed payment status check:', statusData);
+                
+                // Check if payment actually succeeded (sometimes there are false negatives)
+                if (statusData.success && statusData.payments && statusData.payments.length > 0) {
+                    const payment = statusData.payments[0];
+                    if (payment.payment_status === 'SUCCESS') {
+                        console.log('⚠️ Payment actually succeeded despite failure notification');
+                        await handlePaymentSuccess(orderId, payment);
+                        return;
+                    }
+                }
+                
+                // Payment genuinely failed
+                showError('❌ Payment failed. No charges were made. Please try again.');
+                
+                // Reset form to allow retry
+                setTimeout(() => {
+                    hideMessages();
+                }, 5000);
+                
+            } catch (error) {
+                console.error('Error handling payment failure:', error);
+                forceClosePaymentModal(); // Ensure modal is closed even on error
+                showError('❌ Payment failed. Please try again.');
+            }
+        }
+
+        async function verifyAndHandlePayment(orderId) {
+            try {
+                console.log('🔍 Verifying payment status for order:', orderId);
+                
+                // Wait a moment for payment to be processed
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const statusResponse = await fetch(`/api/payment/status/${orderId}`);
+                const statusData = await statusResponse.json();
+                
+                console.log('Payment verification result:', statusData);
+                
+                if (statusData.success && statusData.payments && statusData.payments.length > 0) {
+                    const payment = statusData.payments[0];
+                    
+                    if (payment.payment_status === 'SUCCESS') {
+                        await handlePaymentSuccess(orderId, payment);
+                    } else if (payment.payment_status === 'FAILED' || payment.payment_status === 'CANCELLED') {
+                        await handlePaymentFailure(orderId, { message: `Payment ${payment.payment_status.toLowerCase()}` });
+                    } else {
+                        // Payment still pending, redirect to success page to handle there
+                        console.log('⏳ Payment still pending, redirecting to success page...');
+                        window.location.href = `/success?order_id=${orderId}`;
+                    }
+                } else {
+                    // No payment found, treat as failure
+                    await handlePaymentFailure(orderId, { message: 'No payment record found' });
+                }
+                
+            } catch (error) {
+                console.error('Error verifying payment:', error);
+                showError('Unable to verify payment status. Please check your email or contact support.');
+            }
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const button = document.getElementById('payButton');
+            
+            if (show) {
+                loading.style.display = 'block';
+                button.disabled = true;
+                button.textContent = 'Processing...';
+            } else {
+                loading.style.display = 'none';
+                button.disabled = false;
+                button.textContent = 'Pay Now with CashFree';
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('success').style.display = 'none';
+        }
+
+        // Handle page visibility change (for mobile apps returning from payment)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                console.log('Page became visible - user may have returned from payment');
+                // Refresh credits when page becomes visible
+                loadCredits();
+            }
+        });
+
+        // Credit Management Functions
+        let creditPopupVisible = false;
+
+        async function loadCredits() {
+            try {
+                const response = await fetch('/api/payment/credits');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateCreditsDisplay(data.totalCredits);
+                    updatePaymentHistory(data.paymentHistory);
+                }
+            } catch (error) {
+                console.error('Error loading credits:', error);
+            }
+        }
+
+        function updateCreditsDisplay(totalCredits) {
+            const creditDisplay = document.getElementById('creditDisplay');
+            const creditCount = document.getElementById('creditCount');
+            
+            creditCount.textContent = totalCredits;
+            
+            // Add animation effect when credits update
+            creditDisplay.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                creditDisplay.style.transform = 'scale(1)';
+            }, 200);
+            
+            // Remove loading state
+            creditDisplay.classList.remove('credit-loading');
+        }
+
+        function updatePaymentHistory(payments) {
+            const historyContainer = document.getElementById('paymentHistory');
+            
+            if (payments.length === 0) {
+                historyContainer.innerHTML = '<p>No payments yet</p>';
+                return;
+            }
+            
+            historyContainer.innerHTML = payments
+                .slice(-5) // Show last 5 payments
+                .reverse() // Show newest first
+                .map(payment => `
+                    <div class="payment-item">
+                        <div class="payment-amount">₹${payment.amount}</div>
+                        <div>${payment.customerName}</div>
+                        <div class="payment-date">${new Date(payment.timestamp).toLocaleString()}</div>
+                        <div style="font-size: 0.8em; color: #666;">
+                            ${payment.environment} - ${payment.paymentMethod || 'N/A'}
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        function toggleCreditPopup() {
+            const popup = document.getElementById('creditPopup');
+            creditPopupVisible = !creditPopupVisible;
+            popup.style.display = creditPopupVisible ? 'block' : 'none';
+            
+            if (creditPopupVisible) {
+                loadCredits(); // Refresh data when opening popup
+            }
+        }
+
+        async function resetCredits() {
+            if (!confirm('Are you sure you want to reset all credits? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/payment/credits/reset', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateCreditsDisplay(0);
+                    updatePaymentHistory([]);
+                    showSuccess('Credits reset successfully!');
+                    
+                    // Hide popup after reset
+                    setTimeout(() => {
+                        toggleCreditPopup();
+                    }, 1000);
+                } else {
+                    showError('Failed to reset credits');
+                }
+            } catch (error) {
+                console.error('Error resetting credits:', error);
+                showError('Error resetting credits');
+            }
+        }
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('creditPopup');
+            const creditDisplay = document.getElementById('creditDisplay');
+            
+            if (creditPopupVisible && 
+                !popup.contains(event.target) && 
+                !creditDisplay.contains(event.target)) {
+                toggleCreditPopup();
+            }
+        });
+
+        // Load credits on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set initial loading state
+            const creditDisplay = document.getElementById('creditDisplay');
+            creditDisplay.classList.add('credit-loading');
+            
+            // Load credits after a short delay to ensure everything is ready
+            setTimeout(loadCredits, 1000);
+        });
+    </script>
+</body>
+</html>
