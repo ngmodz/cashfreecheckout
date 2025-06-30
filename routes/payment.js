@@ -165,6 +165,22 @@ router.get('/status/:orderId', async (req, res) => {
 
                 const totalCredits = creditManager.addCredit(creditData);
                 console.log(`💰 Credit processed! Total credits: ${totalCredits}`);
+                
+            } else if (payment.payment_status === 'FAILED') {
+                // Track failed payment
+                const failedPaymentData = {
+                    orderId: orderId,
+                    transactionId: payment.cf_payment_id || payment.payment_id,
+                    amount: payment.payment_amount,
+                    customerEmail: payment.customer_email,
+                    customerName: payment.customer_name,
+                    paymentMethod: payment.payment_method,
+                    errorDetails: payment.error_details,
+                    environment: process.env.CASHFREE_ENVIRONMENT
+                };
+
+                const totalFailedPayments = creditManager.addFailedPayment(failedPaymentData);
+                console.log(`❌ Failed payment processed! Total failed payments: ${totalFailedPayments}`);
             }
         }
 
@@ -187,17 +203,39 @@ router.get('/credits', (req, res) => {
     try {
         const totalCredits = creditManager.getTotalCredits();
         const paymentHistory = creditManager.getPaymentHistory();
+        const failedPayments = creditManager.getFailedPayments();
 
         res.json({
             success: true,
             totalCredits: totalCredits,
-            paymentHistory: paymentHistory
+            paymentHistory: paymentHistory,
+            failedPayments: failedPayments,
+            totalFailedPayments: failedPayments.length
         });
     } catch (error) {
         console.error('Error fetching credits:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch credits'
+        });
+    }
+});
+
+// Get Failed Payments Route (for analytics)
+router.get('/failed-payments', (req, res) => {
+    try {
+        const failedPayments = creditManager.getFailedPayments();
+
+        res.json({
+            success: true,
+            failedPayments: failedPayments,
+            totalFailedPayments: failedPayments.length
+        });
+    } catch (error) {
+        console.error('Error fetching failed payments:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch failed payments'
         });
     }
 });
@@ -241,6 +279,21 @@ router.post('/webhook', (req, res) => {
 
             const totalCredits = creditManager.addCredit(creditData);
             console.log(`💰 Webhook credit processed! Total credits: ${totalCredits}`);
+        } else if (paymentData.payment_status === 'FAILED') {
+            // Track failed payment from webhook
+            const failedPaymentData = {
+                orderId: paymentData.order_id,
+                transactionId: paymentData.cf_payment_id || paymentData.payment_id,
+                amount: paymentData.payment_amount,
+                customerEmail: paymentData.customer_email,
+                customerName: paymentData.customer_name,
+                paymentMethod: paymentData.payment_method,
+                errorDetails: paymentData.error_details,
+                environment: process.env.CASHFREE_ENVIRONMENT
+            };
+
+            const totalFailedPayments = creditManager.addFailedPayment(failedPaymentData);
+            console.log(`❌ Webhook failed payment processed! Total failed payments: ${totalFailedPayments}`);
         }
         
         console.log(`Payment ${paymentData.order_id} status: ${paymentData.payment_status}`);

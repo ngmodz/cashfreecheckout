@@ -653,27 +653,80 @@
                         result = await new Promise((resolve, reject) => {
                             // Set up event listeners for popup events
                             let paymentCompleted = false;
+                            let statusPollingInterval = null;
+                            let statusCheckCount = 0;
+                            const maxStatusChecks = 30; // Maximum status checks (30 * 2s = 1 minute)
+                            
+                            // Function to poll payment status
+                            const pollPaymentStatus = () => {
+                                if (paymentCompleted || statusCheckCount >= maxStatusChecks) {
+                                    if (statusPollingInterval) {
+                                        clearInterval(statusPollingInterval);
+                                    }
+                                    return;
+                                }
+                                
+                                statusCheckCount++;
+                                console.log(`🔍 Polling payment status (attempt ${statusCheckCount}/${maxStatusChecks})...`);
+                                
+                                fetch(`/api/payment/status/${orderData.order_id}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success && data.payments && data.payments.length > 0) {
+                                            const payment = data.payments[0];
+                                            
+                                            if (payment.payment_status === 'SUCCESS') {
+                                                console.log('✅ Status polling detected successful payment:', payment);
+                                                paymentCompleted = true;
+                                                clearInterval(statusPollingInterval);
+                                                resolve({ paymentDetails: payment, success: true, detectedBy: 'polling' });
+                                            } else if (payment.payment_status === 'FAILED') {
+                                                console.log('❌ Status polling detected failed payment:', payment);
+                                                paymentCompleted = true;
+                                                clearInterval(statusPollingInterval);
+                                                resolve({ error: payment.error_details || { message: 'Payment failed' }, success: false, detectedBy: 'polling' });
+                                            }
+                                            // For PENDING status, continue polling
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error polling payment status:', error);
+                                        // Continue polling even if there's an error
+                                    });
+                            };
+                            
+                            // Start status polling after 3 seconds
+                            setTimeout(() => {
+                                if (!paymentCompleted) {
+                                    console.log('🕐 Starting payment status polling...');
+                                    statusPollingInterval = setInterval(pollPaymentStatus, 2000); // Poll every 2 seconds
+                                }
+                            }, 3000);
                             
                             // Override the success/failure callbacks
                             checkoutOptions.onSuccess = function(data) {
-                                console.log('✅ v3 Payment successful:', data);
+                                console.log('✅ v3 Payment successful (callback):', data);
                                 paymentCompleted = true;
-                                resolve({ paymentDetails: data, success: true });
+                                if (statusPollingInterval) clearInterval(statusPollingInterval);
+                                resolve({ paymentDetails: data, success: true, detectedBy: 'callback' });
                             };
                             
                             checkoutOptions.onFailure = function(data) {
-                                console.log('❌ v3 Payment failed:', data);
+                                console.log('❌ v3 Payment failed (callback):', data);
                                 paymentCompleted = true;
-                                resolve({ error: data, success: false });
+                                if (statusPollingInterval) clearInterval(statusPollingInterval);
+                                resolve({ error: data, success: false, detectedBy: 'callback' });
                             };
                             
-                            // Set a timeout to handle cases where the popup is stuck
+                            // Set a shorter timeout for better user experience
                             const timeoutId = setTimeout(() => {
                                 if (!paymentCompleted) {
-                                    console.log('⏰ Payment timeout - checking status...');
+                                    console.log('⏰ Payment timeout - performing final status check...');
+                                    paymentCompleted = true;
+                                    if (statusPollingInterval) clearInterval(statusPollingInterval);
                                     resolve({ timeout: true });
                                 }
-                            }, 120000); // 2 minutes timeout
+                            }, 60000); // Reduced to 1 minute timeout
                             
                             // Start the checkout
                             cashfree.checkout(checkoutOptions).then((checkoutResult) => {
@@ -682,16 +735,21 @@
                                     console.log('🔄 Checkout completed, result:', checkoutResult);
                                     // If no callback was triggered, check the result
                                     if (checkoutResult && checkoutResult.error) {
-                                        resolve({ error: checkoutResult.error, success: false });
+                                        paymentCompleted = true;
+                                        if (statusPollingInterval) clearInterval(statusPollingInterval);
+                                        resolve({ error: checkoutResult.error, success: false, detectedBy: 'checkout_result' });
                                     } else {
-                                        resolve({ checkoutResult: checkoutResult });
+                                        // Don't resolve here, let polling handle it
+                                        console.log('🔄 Checkout completed without clear result, letting polling continue...');
                                     }
                                 }
                             }).catch((error) => {
                                 clearTimeout(timeoutId);
                                 if (!paymentCompleted) {
                                     console.error('❌ Checkout error:', error);
-                                    resolve({ error: error, success: false });
+                                    paymentCompleted = true;
+                                    if (statusPollingInterval) clearInterval(statusPollingInterval);
+                                    resolve({ error: error, success: false, detectedBy: 'checkout_error' });
                                 }
                             });
                         });
@@ -723,28 +781,31 @@
                 
                 // Handle timeout case
                 if (result && result.timeout) {
-                    console.log('⏰ Payment timed out, verifying status...');
+                    console.log('⏰ Payment timed out, performing final verification...');
                     await verifyAndHandlePayment(orderData.order_id);
                     return;
                 }
                 
-                // Handle explicit failure
+                // Handle explicit failure with detection method info
                 if (result && result.success === false) {
-                    console.log('❌ Payment explicitly failed');
+                    const detectionMethod = result.detectedBy || 'unknown';
+                    console.log(`❌ Payment failed (detected by: ${detectionMethod})`);
                     await handlePaymentFailure(orderData.order_id, result.error || { message: 'Payment was cancelled or failed' });
                     return;
                 }
                 
                 // Handle payment result based on success/failure
                 if (result && result.error && !result.success) {
-                    console.error('❌ Payment failed:', result.error);
+                    const detectionMethod = result.detectedBy || 'unknown';
+                    console.error(`❌ Payment failed (detected by: ${detectionMethod}):`, result.error);
                     await handlePaymentFailure(orderData.order_id, result.error);
                     return;
                 }
                 
                 // Handle successful payment completion
                 if (result && result.paymentDetails && result.success) {
-                    console.log('💰 Payment details received:', result.paymentDetails);
+                    const detectionMethod = result.detectedBy || 'unknown';
+                    console.log(`💰 Payment successful (detected by: ${detectionMethod}):`, result.paymentDetails);
                     await handlePaymentSuccess(orderData.order_id, result.paymentDetails);
                 } else if (result && result.redirect) {
                     console.log('ℹ️ Redirecting to CashFree...');
@@ -858,13 +919,13 @@
                 forceClosePaymentModal();
                 
                 // Show immediate feedback to user
-                showError('❌ Payment failed. Verifying status...');
+                showError('❌ Payment failed. Verifying final status...');
                 
-                // Verify the actual payment status to be sure
+                // Double-check the payment status to be absolutely sure
                 const statusResponse = await fetch(`/api/payment/status/${orderId}`);
                 const statusData = await statusResponse.json();
                 
-                console.log('Failed payment status check:', statusData);
+                console.log('Final failure verification:', statusData);
                 
                 // Check if payment actually succeeded (sometimes there are false negatives)
                 if (statusData.success && statusData.payments && statusData.payments.length > 0) {
@@ -876,18 +937,29 @@
                     }
                 }
                 
-                // Payment genuinely failed
-                showError('❌ Payment failed. No charges were made. Please try again.');
+                // Payment genuinely failed - redirect to failure page with details
+                console.log('💳 Redirecting to failure page...');
                 
-                // Reset form to allow retry
+                // Create failure page URL with order details
+                const failureUrl = `/failure?order_id=${orderId}&error=${encodeURIComponent(error?.message || 'Payment failed')}`;
+                
+                // Show success message about redirect
+                showError('❌ Payment failed. Redirecting to details page...');
+                
+                // Redirect to failure page after 2 seconds
                 setTimeout(() => {
-                    hideMessages();
-                }, 5000);
+                    window.location.href = failureUrl;
+                }, 2000);
                 
             } catch (error) {
                 console.error('Error handling payment failure:', error);
                 forceClosePaymentModal(); // Ensure modal is closed even on error
                 showError('❌ Payment failed. Please try again.');
+                
+                // Reset form to allow retry after 5 seconds
+                setTimeout(() => {
+                    hideMessages();
+                }, 5000);
             }
         }
 

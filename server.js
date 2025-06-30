@@ -29,6 +29,11 @@ app.get('/success', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'success.html'));
 });
 
+// Failure page
+app.get('/failure', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'failure.html'));
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);

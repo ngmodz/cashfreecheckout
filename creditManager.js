@@ -77,6 +77,45 @@ class CreditManager {
         return credits.totalCredits;
     }
 
+    addFailedPayment(paymentData) {
+        const credits = this.readCredits();
+        
+        // Initialize failed payments array if it doesn't exist
+        if (!credits.failedPayments) {
+            credits.failedPayments = [];
+        }
+        
+        // Check if this failed payment already exists to avoid duplicates
+        const existingFailedPayment = credits.failedPayments.find(
+            p => p.orderId === paymentData.orderId || p.transactionId === paymentData.transactionId
+        );
+
+        if (existingFailedPayment) {
+            console.log('Failed payment already recorded:', paymentData.orderId);
+            return credits.failedPayments.length;
+        }
+
+        // Add new failed payment record
+        const newFailedPayment = {
+            orderId: paymentData.orderId,
+            transactionId: paymentData.transactionId,
+            amount: paymentData.amount,
+            customerEmail: paymentData.customerEmail,
+            customerName: paymentData.customerName,
+            paymentMethod: paymentData.paymentMethod,
+            errorDetails: paymentData.errorDetails,
+            timestamp: new Date().toISOString(),
+            environment: paymentData.environment || 'SANDBOX'
+        };
+
+        credits.failedPayments.push(newFailedPayment);
+
+        this.writeCredits(credits);
+
+        console.log(`❌ Failed payment recorded! Total failed payments: ${credits.failedPayments.length}`);
+        return credits.failedPayments.length;
+    }
+
     getTotalCredits() {
         const credits = this.readCredits();
         return credits.totalCredits;
@@ -85,6 +124,11 @@ class CreditManager {
     getPaymentHistory() {
         const credits = this.readCredits();
         return credits.payments;
+    }
+
+    getFailedPayments() {
+        const credits = this.readCredits();
+        return credits.failedPayments || [];
     }
 
     resetCredits() {
