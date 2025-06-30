@@ -13,14 +13,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Routes
+// Routes (must come before static middleware to override index.html)
 app.use('/api/payment', paymentRoutes);
 
-// Home route
+// Home route - serve the homepage
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'home.html'));
+});
+
+// Checkout page
+app.get('/checkout', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -33,6 +35,9 @@ app.get('/success', (req, res) => {
 app.get('/failure', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'failure.html'));
 });
+
+// Serve static files (after routes to prevent index.html override)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

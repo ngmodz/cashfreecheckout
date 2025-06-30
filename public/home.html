@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CashFree Payment Demo - Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 120px 2rem 80px;
+            margin-top: 70px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 15px 40px;
+            border: 2px solid white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-button:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 2rem;
+            background: #f8f9fa;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Payment Methods Section */
+        .payment-methods {
+            padding: 80px 2rem;
+            background: white;
+        }
+
+        .payment-methods-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .payment-method {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .payment-method-icon {
+            font-size: 2rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 2rem;
+        }
+
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .payment-button {
+            display: inline-block;
+            background: white;
+            color: #28a745;
+            padding: 18px 45px;
+            border: none;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .payment-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            color: #1e7e34;
+        }
+
+        /* Footer */
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 40px 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        /* Credit Display */
+        .credit-display {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .credit-display:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .credit-number {
+            font-size: 1.2em;
+            margin-left: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+
+            .credit-display {
+                top: 80px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+
+            .footer-links {
+                gap: 1rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .feature-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .feature-card:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                💳 CashFree Demo
+            </div>
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#payment">Payment</a></li>
+                    <li><a href="/checkout">Checkout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Credit Display -->
+    <div class="credit-display" id="creditDisplay">
+        💰 Credits: <span class="credit-number" id="creditCount">0</span>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Secure Payment Solutions</h1>
+            <p>Experience seamless, fast, and secure payments with CashFree's integrated checkout system. Accept payments from multiple sources with ease.</p>
+            <a href="#payment" class="cta-button">Try Payment Demo</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2 class="section-title">Why Choose CashFree?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure Payments</h3>
+                    <p>Bank-grade security with SSL encryption and PCI DSS compliance ensures your transactions are always protected.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning Fast</h3>
+                    <p>Process payments in seconds with our optimized checkout flow and instant payment confirmations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Multiple Payment Options</h3>
+                    <p>Support for cards, UPI, net banking, wallets, and EMI options to cater to all customer preferences.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Methods Section -->
+    <section class="payment-methods">
+        <div class="payment-methods-container">
+            <h2 class="section-title">Supported Payment Methods</h2>
+            <div class="payment-grid">
+                <div class="payment-method">
+                    <div class="payment-method-icon">💳</div>
+                    <span>Credit Cards</span>
+                </div>
+                <div class="payment-method">
+                    <div class="payment-method-icon">💰</div>
+                    <span>Debit Cards</span>
+                </div>
+                <div class="payment-method">
+                    <div class="payment-method-icon">📱</div>
+                    <span>UPI Payments</span>
+                </div>
+                <div class="payment-method">
+                    <div class="payment-method-icon">🏦</div>
+                    <span>Net Banking</span>
+                </div>
+                <div class="payment-method">
+                    <div class="payment-method-icon">📟</div>
+                    <span>Digital Wallets</span>
+                </div>
+                <div class="payment-method">
+                    <div class="payment-method-icon">💵</div>
+                    <span>EMI Options</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="payment">
+        <div class="cta-content">
+            <h2>Ready to Make a Payment?</h2>
+            <p>Test our secure checkout system with a demo payment. Experience the smooth and fast payment process yourself.</p>
+            <a href="/checkout" class="payment-button">Make a Payment</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#home">Home</a>
+                <a href="#features">Features</a>
+                <a href="/checkout">Checkout</a>
+                <a href="/success.html">Success</a>
+                <a href="/failure.html">Support</a>
+            </div>
+            <p>&copy; 2025 CashFree Payment Demo. Built with ❤️ for developers.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Credit Management
+        async function loadCredits() {
+            try {
+                const response = await fetch('/api/payment/credits');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateCreditsDisplay(data.totalCredits);
+                }
+            } catch (error) {
+                console.error('Error loading credits:', error);
+            }
+        }
+
+        function updateCreditsDisplay(totalCredits) {
+            const creditCount = document.getElementById('creditCount');
+            if (creditCount) {
+                creditCount.textContent = totalCredits;
+            }
+        }
+
+        // Load credits on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCredits();
+        });
+
+        // Update credits when page becomes visible (useful for mobile)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                loadCredits();
+            }
+        });
+
+        // Add click effect to credit display
+        document.getElementById('creditDisplay').addEventListener('click', function() {
+            window.location.href = '/checkout';
+        });
+    </script>
+</body>
+</html>
