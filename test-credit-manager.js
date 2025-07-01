@@ -1,10 +1,8 @@
-const CreditManager = require('./creditManager');
-
 // Set environment to simulate Vercel
 process.env.VERCEL = 'true';
 
-// Create an instance of CreditManager
-const creditManager = new CreditManager();
+// Import the creditManager instance
+const creditManager = require('./creditManager');
 
 // Test adding a credit
 console.log('Initial credits:', creditManager.getTotalCredits());

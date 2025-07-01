@@ -1,11 +1,8 @@
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
-const CreditManager = require('../creditManager');
+const creditManager = require('../creditManager');
 const router = express.Router();
-
-// Initialize credit manager
-const creditManager = new CreditManager();
 
 // CashFree configuration
 const CASHFREE_CONFIG = {
@@ -363,6 +360,60 @@ router.post('/process-credit', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to process credit: ' + (error.message || 'Unknown error')
+        });
+    }
+});
+
+// Test credit route - for debugging only
+router.post('/test-credit', async (req, res) => {
+    try {
+        console.log('Test credit request received:', req.body);
+        
+        // Simple authentication
+        const { secretKey } = req.body;
+        if (secretKey !== 'test-credit-key') {
+            return res.status(401).json({
+                success: false,
+                error: 'Unauthorized - Invalid secret key'
+            });
+        }
+        
+        // Create test payment data
+        const testPayment = {
+            orderId: `test_order_${Date.now()}`,
+            transactionId: `test_tx_${Date.now()}`,
+            amount: req.body.amount || 100,
+            customerEmail: req.body.email || 'test@example.com',
+            customerName: req.body.name || 'Test User',
+            paymentMethod: req.body.method || 'test'
+        };
+        
+        console.log('Adding test credit:', testPayment);
+        
+        // Add the credit
+        const totalCredits = creditManager.addCredit(testPayment);
+        console.log(`💰 Test credit added! Total credits: ${totalCredits}`);
+        
+        // Get updated credit data
+        const updatedCredits = creditManager.readCredits();
+        
+        // Set cache control headers to prevent caching
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        res.json({
+            success: true,
+            message: 'Test credit added successfully',
+            totalCredits: totalCredits,
+            creditHistory: updatedCredits.creditHistory || []
+        });
+        
+    } catch (error) {
+        console.error('Error adding test credit:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to add test credit: ' + (error.message || 'Unknown error')
         });
     }
 });

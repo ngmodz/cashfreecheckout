@@ -1,10 +1,8 @@
 // Test Credit System
-const CreditManager = require('./creditManager');
+const creditManager = require('./creditManager');
 
 async function testCreditSystem() {
     console.log('🧪 Testing Credit System...\n');
-    
-    const creditManager = new CreditManager();
     
     // Test 1: Initial credits
     console.log('📊 Initial credits:', creditManager.getTotalCredits());
