@@ -39,6 +39,11 @@ app.get('/failure', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'failure.html'));
 });
 
+// Credits page
+app.get('/credits', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'credits.html'));
+});
+
 // Serve static files (after routes to prevent index.html override)
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Credits - CashFree Checkout</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .credit-count {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        
+        .actions {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Credits</h1>
+        <div class="credit-count" id="creditCount">Loading...</div>
+        <div class="actions">
+            <a href="/" class="btn">Back to Home</a>
+            <a href="/checkout" class="btn">Make a Payment</a>
+        </div>
+    </div>
+    
+    <script>
+        // Load credits on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCredits();
+        });
+        
+        async function loadCredits() {
+            try {
+                const response = await fetch('/api/payment/credits');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('creditCount').textContent = data.totalCredits;
+                }
+            } catch (error) {
+                console.error('Error loading credits:', error);
+                document.getElementById('creditCount').textContent = 'Error loading credits';
+            }
+        }
+    </script>
+</body>
+</html> 

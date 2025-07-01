@@ -40,9 +40,13 @@
       "dest": "server.js"
     },
     {
-      "src": "/failure",
-      "dest": "server.js"
-    },
+          "src": "/failure",
+    "dest": "server.js"
+  },
+  {
+    "src": "/credits",
+    "dest": "server.js"
+  },
     {
       "src": "/js/(.*)",
       "dest": "public/js/$1"
