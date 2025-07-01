@@ -1,10 +1,21 @@
 const fs = require('fs');
 const path = require('path');
 
+// Global in-memory storage for Vercel serverless environment
+let memoryStorage = {
+    totalCredits: 0,
+    payments: [],
+    failedPayments: []
+};
+
 class CreditManager {
     constructor() {
         this.dataFile = path.join(__dirname, 'data', 'credits.json');
-        this.ensureDataDirectory();
+        this.isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
+        
+        if (!this.isVercel) {
+            this.ensureDataDirectory();
+        }
     }
 
     ensureDataDirectory() {
@@ -17,23 +28,33 @@ class CreditManager {
         if (!fs.existsSync(this.dataFile)) {
             const initialData = {
                 totalCredits: 0,
-                payments: []
+                payments: [],
+                failedPayments: []
             };
             fs.writeFileSync(this.dataFile, JSON.stringify(initialData, null, 2));
         }
     }
 
     readCredits() {
+        if (this.isVercel) {
+            return memoryStorage;
+        }
+        
         try {
             const data = fs.readFileSync(this.dataFile, 'utf8');
             return JSON.parse(data);
         } catch (error) {
             console.error('Error reading credits:', error);
-            return { totalCredits: 0, payments: [] };
+            return { totalCredits: 0, payments: [], failedPayments: [] };
         }
     }
 
     writeCredits(data) {
+        if (this.isVercel) {
+            memoryStorage = data;
+            return true;
+        }
+        
         try {
             fs.writeFileSync(this.dataFile, JSON.stringify(data, null, 2));
             return true;
@@ -134,7 +155,8 @@ class CreditManager {
     resetCredits() {
         const initialData = {
             totalCredits: 0,
-            payments: []
+            payments: [],
+            failedPayments: []
         };
         this.writeCredits(initialData);
         return true;
