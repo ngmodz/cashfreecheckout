@@ -302,6 +302,84 @@
             font-size: 1.2em;
             margin-left: 5px;
         }
+        
+        /* Credit Activity */
+        .credit-activity {
+            position: fixed;
+            top: 150px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            z-index: 999;
+            display: none;
+        }
+        
+        .credit-activity-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .credit-activity-close {
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #6c757d;
+        }
+        
+        .credit-activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .credit-activity-success {
+            border-left: 3px solid #28a745;
+        }
+        
+        .credit-activity-failed {
+            border-left: 3px solid #dc3545;
+        }
+        
+        .credit-activity-details {
+            font-size: 0.9em;
+        }
+        
+        .credit-activity-change {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .credit-activity-change-success {
+            color: #28a745;
+        }
+        
+        .credit-activity-change-failed {
+            color: #dc3545;
+        }
+        
+        .credit-activity-view-all {
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .credit-activity-link {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        
+        .credit-activity-link:hover {
+            text-decoration: underline;
+        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -383,6 +461,20 @@
     <!-- Credit Display -->
     <div class="credit-display" id="creditDisplay">
         💰 Credits: <span class="credit-number" id="creditCount">0</span>
+    </div>
+    
+    <!-- Credit Activity Popup -->
+    <div class="credit-activity" id="creditActivity">
+        <div class="credit-activity-title">
+            <span>Recent Credit Activity</span>
+            <span class="credit-activity-close" id="closeActivity">&times;</span>
+        </div>
+        <div id="creditActivityItems">
+            <!-- Credit activity items will be added here -->
+        </div>
+        <div class="credit-activity-view-all">
+            <a href="/credits" class="credit-activity-link">View all credit history</a>
+        </div>
     </div>
 
     <!-- Hero Section -->
@@ -497,6 +589,11 @@
                 
                 if (data.success) {
                     updateCreditsDisplay(data.totalCredits);
+                    
+                    // Update credit activity if available
+                    if (data.creditHistory && data.creditHistory.length > 0) {
+                        updateCreditActivity(data.creditHistory);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading credits:', error);
@@ -509,10 +606,69 @@
                 creditCount.textContent = totalCredits;
             }
         }
+        
+        function updateCreditActivity(history) {
+            const activityContainer = document.getElementById('creditActivityItems');
+            activityContainer.innerHTML = '';
+            
+            // Sort by timestamp (newest first) and take only the latest 5
+            const recentActivity = history
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                .slice(0, 5);
+            
+            recentActivity.forEach(item => {
+                const activityItem = document.createElement('div');
+                activityItem.className = `credit-activity-item credit-activity-${item.type}`;
+                
+                // Format date
+                const date = new Date(item.timestamp);
+                const formattedDate = date.toLocaleDateString();
+                
+                activityItem.innerHTML = `
+                    <div class="credit-activity-details">
+                        ${formatPaymentMethod(item.paymentMethod)}
+                        <br>
+                        <small>${formattedDate}</small>
+                    </div>
+                    <div class="credit-activity-change credit-activity-change-${item.type}">
+                        ${item.type === 'success' ? '+1' : '+0'}
+                    </div>
+                `;
+                
+                activityContainer.appendChild(activityItem);
+            });
+        }
+        
+        function formatPaymentMethod(method) {
+            if (!method) return 'Payment';
+            
+            const methodMap = {
+                'cc': 'Credit Card',
+                'dc': 'Debit Card',
+                'nb': 'Net Banking',
+                'upi': 'UPI',
+                'wallet': 'Digital Wallet',
+                'emi': 'EMI',
+                'paylater': 'Pay Later',
+                'manual': 'Manual'
+            };
+            
+            return methodMap[method.toLowerCase()] || method;
+        }
 
         // Load credits on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadCredits();
+            
+            // Set up event listeners for credit activity popup
+            document.getElementById('creditDisplay').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('creditActivity').style.display = 'block';
+            });
+            
+            document.getElementById('closeActivity').addEventListener('click', function() {
+                document.getElementById('creditActivity').style.display = 'none';
+            });
         });
 
         // Update credits when page becomes visible (useful for mobile)
@@ -520,11 +676,6 @@
             if (!document.hidden) {
                 loadCredits();
             }
-        });
-
-        // Add click effect to credit display
-        document.getElementById('creditDisplay').addEventListener('click', function() {
-            window.location.href = '/credits';
         });
     </script>
 </body>

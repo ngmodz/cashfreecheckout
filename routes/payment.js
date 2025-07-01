@@ -135,7 +135,7 @@ router.post('/create-order', async (req, res) => {
     }
 });
 
-// Get Payment Status Route with Credit Processing
+// Get Payment Status Route - Only fetches status without processing credits
 router.get('/status/:orderId', async (req, res) => {
     try {
         const { orderId } = req.params;
@@ -147,43 +147,8 @@ router.get('/status/:orderId', async (req, res) => {
 
         console.log('Payment status response:', response.data);
 
-        // Check if payment was successful and add credit
-        if (response.data && response.data.length > 0) {
-            const payment = response.data[0];
-            
-            if (payment.payment_status === 'SUCCESS') {
-                // Add credit for successful payment
-                const creditData = {
-                    orderId: orderId,
-                    transactionId: payment.cf_payment_id || payment.payment_id,
-                    amount: payment.payment_amount,
-                    customerEmail: payment.customer_email,
-                    customerName: payment.customer_name,
-                    paymentMethod: payment.payment_method,
-                    environment: process.env.CASHFREE_ENVIRONMENT
-                };
-
-                const totalCredits = creditManager.addCredit(creditData);
-                console.log(`💰 Credit processed! Total credits: ${totalCredits}`);
-                
-            } else if (payment.payment_status === 'FAILED') {
-                // Track failed payment
-                const failedPaymentData = {
-                    orderId: orderId,
-                    transactionId: payment.cf_payment_id || payment.payment_id,
-                    amount: payment.payment_amount,
-                    customerEmail: payment.customer_email,
-                    customerName: payment.customer_name,
-                    paymentMethod: payment.payment_method,
-                    errorDetails: payment.error_details,
-                    environment: process.env.CASHFREE_ENVIRONMENT
-                };
-
-                const totalFailedPayments = creditManager.addFailedPayment(failedPaymentData);
-                console.log(`❌ Failed payment processed! Total failed payments: ${totalFailedPayments}`);
-            }
-        }
-
+        // Return the payment data without processing credits
+        // Credits will be processed by the explicit process-credit endpoint
         res.json({
             success: true,
             payments: response.data
@@ -201,22 +166,35 @@ router.get('/status/:orderId', async (req, res) => {
 // Get Credits Route
 router.get('/credits', (req, res) => {
     try {
-        const totalCredits = creditManager.getTotalCredits();
-        const paymentHistory = creditManager.getPaymentHistory();
-        const failedPayments = creditManager.getFailedPayments();
-
+        console.log('Credits API request received');
+        
+        // Read credits directly to get the most up-to-date data
+        const credits = creditManager.readCredits();
+        const totalCredits = credits.totalCredits || 0;
+        const paymentHistory = credits.payments || [];
+        const failedPayments = credits.failedPayments || [];
+        const creditHistory = credits.creditHistory || [];
+        
+        console.log(`Returning credits data: ${totalCredits} credits, ${creditHistory.length} history entries`);
+        
+        // Set cache control headers to prevent caching
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
         res.json({
             success: true,
             totalCredits: totalCredits,
             paymentHistory: paymentHistory,
             failedPayments: failedPayments,
-            totalFailedPayments: failedPayments.length
+            totalFailedPayments: failedPayments.length,
+            creditHistory: creditHistory
         });
     } catch (error) {
         console.error('Error fetching credits:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to fetch credits'
+            error: 'Failed to fetch credits: ' + (error.message || 'Unknown error')
         });
     }
 });
@@ -325,9 +303,32 @@ router.post('/process-credit', async (req, res) => {
         
         // Validate required fields
         if (!orderId || !amount) {
+            console.log('Missing required fields for credit processing');
             return res.status(400).json({
                 success: false,
                 error: 'Missing required fields: orderId, amount'
+            });
+        }
+        
+        // Debug info
+        console.log(`Processing credit for order ${orderId} with transaction ID ${transactionId || 'none'}`);
+        console.log(`Environment: ${process.env.VERCEL ? 'Vercel' : 'Local'}, VERCEL env var: ${process.env.VERCEL}`);
+        
+        // First check if this payment has already been credited
+        const credits = creditManager.readCredits();
+        console.log('Current credits data:', JSON.stringify(credits));
+        
+        const existingPayment = credits.payments.find(
+            p => p.orderId === orderId || (transactionId && p.transactionId === transactionId)
+        );
+        
+        if (existingPayment) {
+            console.log(`Payment already credited: ${orderId} / ${transactionId}`);
+            return res.json({
+                success: true,
+                message: 'Credit already processed (no duplicate added)',
+                totalCredits: credits.totalCredits,
+                alreadyProcessed: true
             });
         }
         
@@ -339,23 +340,29 @@ router.post('/process-credit', async (req, res) => {
             customerEmail: customerEmail || 'customer@example.com',
             customerName: customerName || 'Customer',
             paymentMethod: paymentMethod || 'manual',
-            environment: process.env.CASHFREE_ENVIRONMENT
+            environment: process.env.CASHFREE_ENVIRONMENT || 'UNKNOWN'
         };
         
+        console.log('Adding credit with data:', JSON.stringify(creditData));
         const totalCredits = creditManager.addCredit(creditData);
         console.log(`💰 Manual credit processed! Total credits: ${totalCredits}`);
+        
+        // Verify credit was added by reading credits again
+        const updatedCredits = creditManager.readCredits();
+        console.log('Updated credits data:', JSON.stringify(updatedCredits));
         
         res.json({
             success: true,
             message: 'Credit processed successfully',
-            totalCredits
+            totalCredits,
+            creditHistory: updatedCredits.creditHistory || []
         });
         
     } catch (error) {
         console.error('Error processing credit manually:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to process credit'
+            error: 'Failed to process credit: ' + (error.message || 'Unknown error')
         });
     }
 });

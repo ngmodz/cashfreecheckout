@@ -410,8 +410,21 @@
         // Credit Management Functions
         async function loadCredits() {
             try {
-                const response = await fetch('/api/payment/credits');
+                // Add timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                const response = await fetch(`/api/payment/credits?t=${timestamp}`, {
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('Credits API response:', data);
                 
                 if (data.success) {
                     document.getElementById('creditCount').textContent = data.totalCredits;
@@ -423,6 +436,9 @@
                     creditUpdate.style.display = 'block';
                     
                     console.log('Credits loaded:', data.totalCredits);
+                    console.log('Credit history:', data.creditHistory);
+                } else {
+                    console.error('Failed to load credits:', data.error || 'Unknown error');
                 }
             } catch (error) {
                 console.error('Error loading credits:', error);
@@ -430,9 +446,17 @@
             }
         }
 
-        // Process credit manually to ensure it's added
+        // Process credit manually to ensure it's added (only once)
+        let creditProcessed = false; // Flag to prevent duplicate processing
+        
         async function processCredit(orderId, payment) {
             try {
+                // Skip if already processed for this page view
+                if (creditProcessed) {
+                    console.log('Credit already processed for this order, skipping duplicate processing');
+                    return;
+                }
+                
                 console.log('Processing credit manually for order:', orderId);
                 
                 // Only process if payment is successful
@@ -448,13 +472,20 @@
                     
                     console.log('Sending credit data:', creditData);
                     
-                    const response = await fetch('/api/payment/process-credit', {
+                    // Add a timestamp to prevent caching issues
+                    const timestamp = new Date().getTime();
+                    const response = await fetch(`/api/payment/process-credit?t=${timestamp}`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache, no-store'
                         },
                         body: JSON.stringify(creditData)
                     });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
                     
                     const result = await response.json();
                     console.log('Credit processing result:', result);
@@ -464,10 +495,20 @@
                         document.getElementById('creditCount').textContent = result.totalCredits;
                         document.getElementById('newCreditCount').textContent = result.totalCredits;
                         document.getElementById('creditUpdate').style.display = 'block';
+                        
+                        // Mark as processed to prevent duplicates
+                        creditProcessed = true;
+                        
+                        // Reload credits after a short delay to ensure UI is updated
+                        setTimeout(loadCredits, 1000);
+                    } else {
+                        console.error('Credit processing failed:', result.error || 'Unknown error');
+                        alert('Failed to process credits. Please contact support.');
                     }
                 }
             } catch (error) {
                 console.error('Error processing credit manually:', error);
+                alert('Error processing credits. Please try refreshing the page or contact support.');
             }
         }
         

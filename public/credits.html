@@ -25,9 +25,9 @@
             width: 100%;
         }
         
-        h1 {
+        h1, h2 {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         
         .credit-count {
@@ -50,6 +50,111 @@
         
         .actions {
             text-align: center;
+            margin-top: 30px;
+        }
+        
+        .credit-history {
+            margin: 30px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .history-item-success {
+            border-left: 5px solid #28a745;
+        }
+        
+        .history-item-failed {
+            border-left: 5px solid #dc3545;
+        }
+        
+        .history-details {
+            flex-grow: 1;
+        }
+        
+        .history-customer {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .history-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .history-amount {
+            font-weight: bold;
+        }
+        
+        .history-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .credit-change {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-left: 15px;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .credit-change-success {
+            color: #28a745;
+        }
+        
+        .credit-change-failed {
+            color: #dc3545;
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .no-history {
+            text-align: center;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            color: #6c757d;
         }
     </style>
 </head>
@@ -57,6 +162,19 @@
     <div class="container">
         <h1>Your Credits</h1>
         <div class="credit-count" id="creditCount">Loading...</div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading credit history...</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div id="creditHistoryContainer">
+            <h2>Credit History</h2>
+            <div class="credit-history" id="creditHistory"></div>
+        </div>
+        
         <div class="actions">
             <a href="/" class="btn">Back to Home</a>
             <a href="/checkout" class="btn">Make a Payment</a>
@@ -71,16 +189,105 @@
         
         async function loadCredits() {
             try {
-                const response = await fetch('/api/payment/credits');
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('errorMessage').style.display = 'none';
+                
+                // Add timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                const response = await fetch(`/api/payment/credits?t=${timestamp}`, {
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('Credits API response:', data);
                 
                 if (data.success) {
+                    // Update credit count
                     document.getElementById('creditCount').textContent = data.totalCredits;
+                    
+                    // Display credit history
+                    displayCreditHistory(data.creditHistory);
+                } else {
+                    showError('Failed to load credits data');
                 }
             } catch (error) {
                 console.error('Error loading credits:', error);
-                document.getElementById('creditCount').textContent = 'Error loading credits';
+                showError('Error loading credits data. Please try again later.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
             }
+        }
+        
+        function displayCreditHistory(history) {
+            const historyContainer = document.getElementById('creditHistory');
+            historyContainer.innerHTML = '';
+            
+            if (!history || history.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="no-history">
+                        <p>No credit history found.</p>
+                        <p>Make a payment to earn credits!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort history by timestamp (newest first)
+            history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item history-item-${item.type}`;
+                
+                const date = new Date(item.timestamp);
+                const formattedDate = date.toLocaleString();
+                
+                historyItem.innerHTML = `
+                    <div class="history-details">
+                        <div class="history-customer">${item.customerName || 'Customer'}</div>
+                        <div class="history-info">
+                            ${formatPaymentMethod(item.paymentMethod)} | Order: ${item.orderId}
+                        </div>
+                        <div class="history-amount">₹${item.amount || '0'}</div>
+                        <div class="history-date">${formattedDate}</div>
+                    </div>
+                    <div class="credit-change credit-change-${item.type}">
+                        ${item.type === 'success' ? '+1' : '+0'}
+                    </div>
+                `;
+                
+                historyContainer.appendChild(historyItem);
+            });
+        }
+        
+        function formatPaymentMethod(method) {
+            if (!method) return 'Unknown';
+            
+            const methodMap = {
+                'cc': 'Credit Card',
+                'dc': 'Debit Card',
+                'nb': 'Net Banking',
+                'upi': 'UPI',
+                'wallet': 'Digital Wallet',
+                'emi': 'EMI',
+                'paylater': 'Pay Later',
+                'manual': 'Manual'
+            };
+            
+            return methodMap[method.toLowerCase()] || method;
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
         }
     </script>
 </body>
