@@ -1,20 +1,53 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // Global in-memory storage for Vercel serverless environment
+// This will reset on each cold start, but persist during function execution
 let memoryStorage = {
     totalCredits: 0,
     payments: [],
     failedPayments: []
 };
 
+// Try to use /tmp directory in Vercel for more persistence between invocations
+const VERCEL_TEMP_FILE = '/tmp/cashfree-credits.json';
+
 class CreditManager {
     constructor() {
         this.dataFile = path.join(__dirname, 'data', 'credits.json');
         this.isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
         
-        if (!this.isVercel) {
+        if (this.isVercel) {
+            this.loadVercelStorage();
+        } else {
             this.ensureDataDirectory();
+        }
+    }
+
+    loadVercelStorage() {
+        try {
+            if (fs.existsSync(VERCEL_TEMP_FILE)) {
+                const data = fs.readFileSync(VERCEL_TEMP_FILE, 'utf8');
+                memoryStorage = JSON.parse(data);
+                console.log('Loaded credits from Vercel temp storage:', memoryStorage.totalCredits);
+            } else {
+                // Initialize the temp file
+                this.writeVercelStorage(memoryStorage);
+                console.log('Initialized Vercel temp storage for credits');
+            }
+        } catch (error) {
+            console.error('Error loading Vercel storage:', error);
+        }
+    }
+
+    writeVercelStorage(data) {
+        try {
+            fs.writeFileSync(VERCEL_TEMP_FILE, JSON.stringify(data, null, 2));
+            return true;
+        } catch (error) {
+            console.error('Error writing to Vercel temp storage:', error);
+            return false;
         }
     }
 
@@ -52,6 +85,7 @@ class CreditManager {
     writeCredits(data) {
         if (this.isVercel) {
             memoryStorage = data;
+            this.writeVercelStorage(data);
             return true;
         }
         

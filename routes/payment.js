@@ -316,4 +316,48 @@ const verifySignature = (signature, body, secret) => {
     return signature === computedSignature;
 };
 
+// Direct credit processing route - can be called from frontend
+router.post('/process-credit', async (req, res) => {
+    try {
+        console.log('Manual credit processing request:', req.body);
+        
+        const { orderId, transactionId, amount, customerEmail, customerName, paymentMethod } = req.body;
+        
+        // Validate required fields
+        if (!orderId || !amount) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: orderId, amount'
+            });
+        }
+        
+        // Add the credit
+        const creditData = {
+            orderId,
+            transactionId: transactionId || `manual_${Date.now()}`,
+            amount,
+            customerEmail: customerEmail || 'customer@example.com',
+            customerName: customerName || 'Customer',
+            paymentMethod: paymentMethod || 'manual',
+            environment: process.env.CASHFREE_ENVIRONMENT
+        };
+        
+        const totalCredits = creditManager.addCredit(creditData);
+        console.log(`💰 Manual credit processed! Total credits: ${totalCredits}`);
+        
+        res.json({
+            success: true,
+            message: 'Credit processed successfully',
+            totalCredits
+        });
+        
+    } catch (error) {
+        console.error('Error processing credit manually:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process credit'
+        });
+    }
+});
+
 module.exports = router;

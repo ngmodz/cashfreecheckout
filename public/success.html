@@ -359,6 +359,9 @@
                 // Update status styling based on payment status
                 if (payment.payment_status.toLowerCase() === 'success') {
                     statusElement.style.background = '#28a745';
+                    
+                    // Process credit for successful payment
+                    processCredit(orderId, payment);
                 } else if (payment.payment_status.toLowerCase() === 'pending') {
                     statusElement.style.background = '#ffc107';
                     statusElement.style.color = '#212529';
@@ -427,6 +430,47 @@
             }
         }
 
+        // Process credit manually to ensure it's added
+        async function processCredit(orderId, payment) {
+            try {
+                console.log('Processing credit manually for order:', orderId);
+                
+                // Only process if payment is successful
+                if (payment && payment.payment_status && payment.payment_status.toLowerCase() === 'success') {
+                    const creditData = {
+                        orderId: orderId,
+                        transactionId: payment.cf_payment_id || payment.payment_id || `manual_${Date.now()}`,
+                        amount: payment.payment_amount || 0,
+                        customerEmail: payment.customer_email || 'customer@example.com',
+                        customerName: payment.customer_name || 'Customer',
+                        paymentMethod: payment.payment_method || 'unknown'
+                    };
+                    
+                    console.log('Sending credit data:', creditData);
+                    
+                    const response = await fetch('/api/payment/process-credit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(creditData)
+                    });
+                    
+                    const result = await response.json();
+                    console.log('Credit processing result:', result);
+                    
+                    if (result.success) {
+                        // Update credit count
+                        document.getElementById('creditCount').textContent = result.totalCredits;
+                        document.getElementById('newCreditCount').textContent = result.totalCredits;
+                        document.getElementById('creditUpdate').style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing credit manually:', error);
+            }
+        }
+        
         // Load credits on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Load credits immediately

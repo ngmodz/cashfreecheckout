@@ -50,11 +50,11 @@ app.use((err, req, res, next) => {
 
 // Only start the server if we're not in a Vercel serverless function
 if (!isVercel) {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
-        console.log(`Visit: http://localhost:${PORT}`);
-    });
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
+    console.log(`Visit: http://localhost:${PORT}`);
+});
 }
 
 // Export the Express app for Vercel serverless functions
