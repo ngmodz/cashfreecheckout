@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/payment/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "server.js"
+    },
+    {
+      "src": "/webhook",
+      "dest": "server.js"
+    },
+    {
+      "src": "/",
+      "dest": "server.js"
+    },
+    {
+      "src": "/checkout",
+      "dest": "server.js"
+    },
+    {
+      "src": "/success",
+      "dest": "server.js"
+    },
+    {
+      "src": "/failure",
+      "dest": "server.js"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "public/js/$1"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "public/css/$1"
+    },
+    {
+      "src": "/(.+\\.js)",
+      "dest": "public/$1"
+    },
+    {
+      "src": "/(.+\\.html)",
+      "dest": "public/$1"
+    },
+    {
+      "src": "/(.+\\.css)",
+      "dest": "public/$1"
+    },
+    {
+      "src": "/(.+)",
+      "dest": "public/$1"
+    }
+  ]
+} 

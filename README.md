@@ -207,20 +207,52 @@ function verifySignature(signature, body, secret) {
 
 ## 🚀 Deployment
 
+### Vercel Deployment
+
+1. **Push your code to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Prepare for Vercel deployment"
+   git push
+   ```
+
+2. **Deploy to Vercel**:
+   - Go to [vercel.com](https://vercel.com) and log in
+   - Click "Add New" > "Project"
+   - Import your GitHub repository
+   - Configure your project:
+     - Framework preset: Other
+     - Root Directory: ./
+     - Build Command: None (leave empty)
+     - Output Directory: public
+     - Install Command: npm install
+
+3. **Configure Environment Variables in Vercel**:
+   - In your Vercel project dashboard, go to "Settings" > "Environment Variables"
+   - Add all required variables:
+     - `CASHFREE_APP_ID`
+     - `CASHFREE_SECRET_KEY`
+     - `CASHFREE_ENVIRONMENT`
+     - `RETURN_URL` (set to your Vercel URL + /success)
+     - `NOTIFY_URL` (set to your Vercel URL + /webhook)
+
+4. **Verify Deployment**:
+   - Click "Deploy" in the Vercel dashboard
+   - Your site will be live at `https://your-project-name.vercel.app`
+   - Test all payment flows to ensure everything works correctly
+
 ### Production Checklist
 
-- [ ] Update `.env` with production credentials
-- [ ] Set `CASHFREE_ENVIRONMENT=PRODUCTION`
-- [ ] Configure production URLs (RETURN_URL, NOTIFY_URL)
-- [ ] Enable HTTPS
-- [ ] Set up proper error logging
+- [ ] Update Vercel environment variables with production credentials
+- [ ] Set `CASHFREE_ENVIRONMENT=PRODUCTION` in Vercel
+- [ ] Configure production URLs (RETURN_URL, NOTIFY_URL) using your Vercel domain
 - [ ] Configure webhook endpoints
 - [ ] Test all payment flows
 - [ ] Set up monitoring and alerts
 
 ### Environment Setup
 ```bash
-# Production
+# Production (for local development)
 export NODE_ENV=production
 export CASHFREE_ENVIRONMENT=PRODUCTION
 export CASHFREE_APP_ID=your_production_app_id

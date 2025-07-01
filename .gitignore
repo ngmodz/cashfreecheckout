@@ -3,6 +3,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Environment variables
 .env
@@ -98,3 +99,17 @@ data/credits.json
 # Temporary files
 *.tmp
 *.temp
+
+# Optional eslint cache
+.eslintcache
+
+# Misc
+.idea
+.swp
+*.swo
+
+# Local Vercel directory
+.vercel
+
+# Payment data (for local testing)
+data/*.json
