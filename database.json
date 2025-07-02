@@ -1,0 +1,27 @@
+{
+  "totalCredits": 1,
+  "payments": [
+    {
+      "orderId": "initial_credit",
+      "transactionId": "initial_tx",
+      "amount": 100,
+      "customerEmail": "customer@example.com",
+      "customerName": "Initial Credit",
+      "paymentMethod": "system",
+      "timestamp": "2025-07-01T19:00:00.000Z"
+    }
+  ],
+  "failedPayments": [],
+  "creditHistory": [
+    {
+      "type": "success",
+      "change": 1,
+      "orderId": "initial_credit",
+      "transactionId": "initial_tx",
+      "amount": 100,
+      "timestamp": "2025-07-01T19:00:00.000Z",
+      "customerName": "Initial Credit",
+      "paymentMethod": "system"
+    }
+  ]
+} 

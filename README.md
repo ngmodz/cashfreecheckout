@@ -9,8 +9,10 @@ A complete implementation of CashFree's hosted popup payment checkout using Node
 - **Environment Support**: Both Sandbox and Production environments
 - **Real-time Webhooks**: Instant payment status notifications
 - **Payment Verification**: Server-side payment status verification
+- **Credit Management**: Built-in credit system for tracking payments
 - **Modern UI**: Responsive and user-friendly checkout interface
 - **Error Handling**: Comprehensive error handling and user feedback
+- **Multi-platform Deployment**: Support for Vercel, Netlify, and traditional hosting
 
 ## 📋 Prerequisites
 
@@ -23,12 +25,22 @@ A complete implementation of CashFree's hosted popup payment checkout using Node
 
 1. **Clone or download the project**:
    ```bash
-   # The project is already set up in your current directory
+   git clone https://github.com/yourusername/cashfree-checkout.git
+   cd cashfree-checkout
    ```
 
 2. **Install dependencies**:
    ```bash
    npm install
+   ```
+   
+   Or use the provided setup scripts:
+   ```bash
+   # For Windows
+   ./setup.bat
+   
+   # For Linux/Mac
+   ./setup.sh
    ```
 
 3. **Configure environment variables**:
@@ -75,17 +87,30 @@ The application will be available at `http://localhost:3000`
 ## 📁 Project Structure
 
 ```
-cashfree-popup-checkout/
+cashfree-checkout/
 ├── server.js                 # Main Express server
 ├── package.json              # Project dependencies and scripts
 ├── .env                      # Environment configuration
+├── database.json             # Local database file
+├── creditManager.js          # Credit management system
 ├── routes/
 │   └── payment.js            # Payment API routes
+├── controllers/              # Route controllers
+├── services/                 # Business logic services
+├── lib/
+│   └── cashfree/             # CashFree SDK wrappers
 ├── public/
 │   ├── index.html            # Main checkout page
-│   └── success.html          # Payment success page
+│   ├── home.html             # Home page
+│   ├── success.html          # Payment success page
+│   ├── failure.html          # Payment failure page
+│   ├── credits.html          # Credits management page
+│   ├── css/                  # Stylesheets
+│   └── js/                   # Client-side JavaScript
+├── netlify/
+│   └── functions/            # Serverless functions for Netlify
 └── .github/
-    └── copilot-instructions.md # Copilot instructions
+    └── workflows/            # GitHub Actions workflows
 ```
 
 ## 🔌 API Endpoints
@@ -236,35 +261,57 @@ function verifySignature(signature, body, secret) {
      - `RETURN_URL` (set to your Vercel URL + /success)
      - `NOTIFY_URL` (set to your Vercel URL + /webhook)
 
-4. **Verify Deployment**:
+4. **Use the Vercel Setup Script**:
+   ```bash
+   # For Windows
+   ./vercel-setup.bat
+   
+   # For Linux/Mac
+   ./vercel-setup.sh
+   ```
+
+5. **Verify Deployment**:
    - Click "Deploy" in the Vercel dashboard
    - Your site will be live at `https://your-project-name.vercel.app`
    - Test all payment flows to ensure everything works correctly
 
+### Netlify Deployment
+
+The project includes Netlify Functions in the `netlify/functions` directory for serverless deployment on Netlify.
+
 ### Production Checklist
 
-- [ ] Update Vercel environment variables with production credentials
-- [ ] Set `CASHFREE_ENVIRONMENT=PRODUCTION` in Vercel
-- [ ] Configure production URLs (RETURN_URL, NOTIFY_URL) using your Vercel domain
+- [ ] Update environment variables with production credentials
+- [ ] Set `CASHFREE_ENVIRONMENT=PRODUCTION` 
+- [ ] Configure production URLs (RETURN_URL, NOTIFY_URL) using your domain
 - [ ] Configure webhook endpoints
 - [ ] Test all payment flows
-- [ ] Set up monitoring and alerts
+- [ ] Enable HTTPS
+- [ ] Set up proper error logging
 
-### Environment Setup
-```bash
-# Production (for local development)
-export NODE_ENV=production
-export CASHFREE_ENVIRONMENT=PRODUCTION
-export CASHFREE_APP_ID=your_production_app_id
-export CASHFREE_SECRET_KEY=your_production_secret_key
-```
+## 📝 Maintenance
+
+This codebase has been cleaned up to remove unnecessary test and backup files. If you need to add test functionality, consider creating a dedicated test directory and using a proper testing framework like Jest.
+
+## 💳 Credit System
+
+This integration includes a built-in credit management system that:
+
+1. **Tracks Payments**: Records all successful payments
+2. **Manages Credits**: Converts payments to credits in the system
+3. **Stores History**: Maintains a history of all credit transactions
+4. **Persistent Storage**: Saves credit data to a local database file
+
+The credit system is managed by the `creditManager.js` file and uses a JSON-based storage system that works across different deployment platforms.
 
 ## 📚 Documentation Links
 
-- [CashFree API Documentation](https://docs.cashfree.com/)
-- [CashFree JavaScript SDK](https://docs.cashfree.com/docs/javascript-integration)
-- [Payment Gateway Integration Guide](https://docs.cashfree.com/docs/payment-gateway)
-- [Webhook Documentation](https://docs.cashfree.com/docs/webhooks)
+- [CashFree API Documentation](https://docs.cashfree.com/reference/pg-getting-started)
+- [CashFree JS SDK Documentation](https://docs.cashfree.com/docs/web-checkout-integration)
+- [CashFree Test Cards](https://docs.cashfree.com/docs/test-data)
+- [Express.js Documentation](https://expressjs.com/)
+- [Vercel Deployment Guide](https://vercel.com/docs/deployments/overview)
+- [Netlify Functions](https://docs.netlify.com/functions/overview/)
 
 ## 🛟 Support
 
@@ -274,7 +321,12 @@ For CashFree specific issues:
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- CashFree team for their comprehensive payment gateway
+- Contributors to this project
 
 ## 🤝 Contributing
 

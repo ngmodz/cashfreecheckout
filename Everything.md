@@ -1,145 +1,769 @@
-# Everything: A Complete & In-Depth Project Guide
+# Everything: The Ultimate CashFree Checkout Integration Guide
 
-This document provides a comprehensive, A-to-Z guide to the CashFree Payment Integration project. It has been expanded to include deep dives into the code, line-by-line explanations, architectural diagrams, and considerations for production environments.
+This document provides the most comprehensive, A-to-Z guide to CashFree Payment Integration ever created. It includes deep technical dives, complete code implementations, architectural patterns, security best practices, production deployment strategies, troubleshooting guides, and real-world examples. This guide covers every single aspect of building a production-ready CashFree checkout system.
 
-## Table of Contents
-1.  [Project Philosophy & Overview](#1-project-philosophy--overview)
-2.  [Core Technologies & Packages](#2-core-technologies--packages)
-3.  [Project Setup (In-Depth)](#3-project-setup-in-depth)
-    -   [Prerequisites](#prerequisites)
-    -   [Installation](#installation)
-    -   [Configuration (.env) Explained](#configuration-env-explained)
-4.  [Architectural Deep Dive](#4-architectural-deep-dive)
-    -   [Project Structure](#project-structure)
-    -   [Data Flow & Logic Separation](#data-flow--logic-separation)
-5.  [Complete System Initialization Process](#5-complete-system-initialization-process)
-    -   [Server Startup Sequence](#server-startup-sequence)
-    -   [Environment Validation](#environment-validation)
-    -   [Middleware Loading Order](#middleware-loading-order)
-6.  [Backend Implementation (Line-by-Line)](#6-backend-implementation-line-by-line)
-    -   [The Server (`server.js`)](#the-server-serverjs)
-    -   [Payment Routes (`routes/payment.js`)](#payment-routes-routespaymentjs)
-    -   [Credit & Data Management (`creditManager.js`)](#credit--data-management-creditmanagerjs)
-7.  [Frontend Implementation (Line-by-Line)](#7-frontend-implementation-line-by-line)
-    -   [Checkout Page (`public/index.html`)](#checkout-page-publicindexhtml)
-    -   [Success & Failure Pages](#success--failure-pages)
-8.  [The Complete Payment Journey: Step-by-Step](#8-the-complete-payment-journey-step-by-step)
-    -   [Phase 1: User Lands on Checkout](#phase-1-user-lands-on-checkout)
-    -   [Phase 2: Form Validation & Submission](#phase-2-form-validation--submission)
-    -   [Phase 3: Order Creation Process](#phase-3-order-creation-process)
-    -   [Phase 4: CashFree SDK Initialization](#phase-4-cashfree-sdk-initialization)
-    -   [Phase 5: Payment Processing](#phase-5-payment-processing)
-    -   [Phase 6: Status Detection & Response](#phase-6-status-detection--response)
-    -   [Phase 7: Post-Payment Processing](#phase-7-post-payment-processing)
-9.  [The Payment Flow: Visualized](#9-the-payment-flow-visualized)
-    -   [Sequence Diagram](#sequence-diagram)
-    -   [State Machine Diagram](#state-machine-diagram)
+## 🎯 What You'll Learn
+- Complete CashFree API integration from scratch to production
+- Advanced payment flow optimization and user experience design
+- Security implementation including webhook verification and fraud prevention
+- Performance optimization and scaling strategies
+- Error handling and recovery mechanisms
+- Testing strategies for payment systems
+- Production deployment and monitoring
+- Compliance and regulatory considerations
+
+## 📚 Table of Contents
+
+### 🏗️ **PART I: FOUNDATION & SETUP**
+1.  [Project Philosophy & Architecture](#1-project-philosophy--architecture)
+2.  [Core Technologies Deep Dive](#2-core-technologies-deep-dive)
+3.  [Complete Project Setup Guide](#3-complete-project-setup-guide)
+    -   [Prerequisites & Environment](#prerequisites--environment)
+    -   [Installation & Configuration](#installation--configuration)
+    -   [Environment Variables Master Guide](#environment-variables-master-guide)
+    -   [CashFree Account Setup](#cashfree-account-setup)
+4.  [System Architecture & Design Patterns](#4-system-architecture--design-patterns)
+    -   [Project Structure Deep Dive](#project-structure-deep-dive)
     -   [Data Flow Architecture](#data-flow-architecture)
-10. [Core Feature: Fast Failed Payment Detection](#10-core-feature-fast-failed-payment-detection)
-    -   [The User Experience Problem](#the-user-experience-problem)
-    -   [The Hybrid Solution: Polling & Callbacks](#the-hybrid-solution-polling--callbacks)
-    -   [Implementation Details](#implementation-details)
-11. [File System & Data Management](#11-file-system--data-management)
-    -   [Credits.json Structure](#creditsjson-structure)
-    -   [Data Persistence Strategy](#data-persistence-strategy)
-    -   [Concurrent Access Handling](#concurrent-access-handling)
-12. [API Endpoint Reference](#12-api-endpoint-reference)
-13. [Security Implementation Details](#13-security-implementation-details)
-    -   [Critical: Webhook Verification](#critical-webhook-verification)
-    -   [Input Validation](#input-validation)
-    -   [Secure Error Handling](#secure-error-handling)
-14. [Error Handling & Recovery](#14-error-handling--recovery)
-    -   [Network Failures](#network-failures)
-    -   [SDK Loading Failures](#sdk-loading-failures)
-    -   [Payment Gateway Errors](#payment-gateway-errors)
-15. [Monitoring & Logging](#15-monitoring--logging)
-16. [Troubleshooting Common Issues](#16-troubleshooting-common-issues)
-17. [Deployment & Production Considerations](#17-deployment--production-considerations)
+    -   [Security Architecture](#security-architecture)
+
+### 💻 **PART II: BACKEND IMPLEMENTATION**
+5.  [Server Implementation Masterclass](#5-server-implementation-masterclass)
+    -   [Express Server Deep Dive](#express-server-deep-dive)
+    -   [Middleware Chain Optimization](#middleware-chain-optimization)
+    -   [Route Management](#route-management)
+6.  [Payment API Implementation](#6-payment-api-implementation)
+    -   [Order Creation Endpoint](#order-creation-endpoint)
+    -   [Payment Status Management](#payment-status-management)
+    -   [Webhook Handler Implementation](#webhook-handler-implementation)
+    -   [Advanced Error Handling](#advanced-error-handling)
+7.  [Data Management & Persistence](#7-data-management--persistence)
+    -   [CreditManager Class Deep Dive](#creditmanager-class-deep-dive)
+    -   [File System vs Database Strategies](#file-system-vs-database-strategies)
+    -   [Data Integrity & Concurrency](#data-integrity--concurrency)
+
+### 🎨 **PART III: FRONTEND IMPLEMENTATION**
+8.  [Frontend Architecture & UX Design](#8-frontend-architecture--ux-design)
+    -   [Checkout Page Implementation](#checkout-page-implementation)
+    -   [SDK Integration Strategies](#sdk-integration-strategies)
+    -   [Form Validation & User Feedback](#form-validation--user-feedback)
+9.  [Payment Flow Optimization](#9-payment-flow-optimization)
+    -   [Fast Failure Detection System](#fast-failure-detection-system)
+    -   [Polling vs Callback Strategies](#polling-vs-callback-strategies)
+    -   [User Experience Optimization](#user-experience-optimization)
+
+### 🔒 **PART IV: SECURITY & COMPLIANCE**
+10. [Security Implementation Guide](#10-security-implementation-guide)
+    -   [Webhook Signature Verification](#webhook-signature-verification)
+    -   [Input Validation & Sanitization](#input-validation--sanitization)
+    -   [PCI Compliance Considerations](#pci-compliance-considerations)
+11. [Fraud Prevention & Risk Management](#11-fraud-prevention--risk-management)
+    -   [Transaction Monitoring](#transaction-monitoring)
+    -   [Rate Limiting & DDoS Protection](#rate-limiting--ddos-protection)
+    -   [Suspicious Activity Detection](#suspicious-activity-detection)
+
+### 📊 **PART V: TESTING & MONITORING**
+12. [Testing Strategies](#12-testing-strategies)
+    -   [Unit Testing Payment Logic](#unit-testing-payment-logic)
+    -   [Integration Testing with CashFree](#integration-testing-with-cashfree)
+    -   [End-to-End Testing Scenarios](#end-to-end-testing-scenarios)
+13. [Monitoring & Analytics](#13-monitoring--analytics)
+    -   [Performance Monitoring](#performance-monitoring)
+    -   [Payment Analytics](#payment-analytics)
+    -   [Error Tracking & Alerting](#error-tracking--alerting)
+
+### 🚀 **PART VI: DEPLOYMENT & PRODUCTION**
+14. [Production Deployment Guide](#14-production-deployment-guide)
+    -   [Environment Configuration](#environment-configuration)
+    -   [Database Migration Strategies](#database-migration-strategies)
+    -   [SSL & HTTPS Configuration](#ssl--https-configuration)
+15. [Scaling & Performance Optimization](#15-scaling--performance-optimization)
+    -   [Load Balancing Strategies](#load-balancing-strategies)
+    -   [Caching Implementation](#caching-implementation)
+    -   [Database Optimization](#database-optimization)
+16. [Maintenance & Support](#16-maintenance--support)
+    -   [Troubleshooting Guide](#troubleshooting-guide)
+    -   [Common Issues & Solutions](#common-issues--solutions)
+    -   [Version Upgrade Strategies](#version-upgrade-strategies)
 
 ---
 
-## 1. Project Philosophy & Overview
+## 1. Project Philosophy & Architecture
 
-This project is a full-stack web application demonstrating a **robust and resilient** integration of CashFree's payment gateway. The core philosophy is not just to make it work, but to make it **production-ready** by focusing on:
+### 🎯 Core Philosophy
 
--   **User Experience**: The user should receive clear, instant feedback at every step.
--   **Resilience**: The system should be resilient to network failures and edge cases (e.g., SDK failing to load).
--   **Maintainability**: The code is separated by concerns, making it easy to understand and extend.
+This CashFree checkout integration is built on **five fundamental principles** that distinguish it from basic implementations:
 
-### Key Architectural Principles
+#### 1. **User-Centric Design**
+- **Zero Friction**: Users should never be confused or lost during payment
+- **Instant Feedback**: Every action provides immediate, clear response
+- **Graceful Failures**: Failed payments are detected and communicated within 3-5 seconds
+- **Mobile-First**: Responsive design optimized for mobile payment flows
 
-1. **Separation of Concerns**: Each component has a single responsibility
-2. **Fail-Safe Design**: Multiple fallback mechanisms for critical operations
-3. **Real-time Feedback**: Instant status updates without page refreshes
-4. **Data Integrity**: Idempotent operations prevent duplicate processing
-5. **Security First**: All sensitive operations are server-side with proper validation
+#### 2. **Production-Ready Architecture**
+- **Scalability**: Designed to handle thousands of concurrent payments
+- **Reliability**: Multiple fallback mechanisms for critical operations
+- **Maintainability**: Clean separation of concerns with clear interfaces
+- **Observability**: Comprehensive logging and monitoring throughout
 
-Key features include:
--   **Popup Checkout**: A seamless, on-site checkout experience.
--   **Full Payment Cycle**: Gracefully handles payment initiation, success, failure, and cancellation.
--   **Persistent Credit System**: A simple file-based "credit" system to demonstrate post-payment actions.
--   **Instant Failure Detection**: A hybrid polling-and-callback mechanism to detect failed payments in ~3-5 seconds.
--   **Comprehensive Analytics**: Tracks both successful and failed payments.
--   **Dual Environment Support**: Easily switch between `SANDBOX` and `PRODUCTION`.
+#### 3. **Security-First Approach**
+- **Defense in Depth**: Multiple layers of security validation
+- **PCI Compliance**: Follows payment industry security standards
+- **Data Protection**: Minimal data storage with secure handling
+- **Fraud Prevention**: Built-in suspicious activity detection
 
-## 2. Core Technologies & Packages
+#### 4. **Developer Experience**
+- **Clear Documentation**: Every function and endpoint documented
+- **Easy Configuration**: Environment-based setup with validation
+- **Debugging Support**: Comprehensive logging and error messages
+- **Testing Support**: Built-in test modes and mock capabilities
 
-The project is built with the following technologies. The choice of `axios` over the `cashfree-pg` backend SDK was deliberate to provide more granular control over request timeouts and error handling, which is crucial for the fast-failure detection system.
+#### 5. **Business Continuity**
+- **High Availability**: Resilient to service disruptions
+- **Data Integrity**: Atomic operations prevent data corruption
+- **Recovery Mechanisms**: Automatic retry and fallback strategies
+- **Audit Trail**: Complete transaction history and compliance logging
 
-| Package                             | Version | Purpose & Rationale                                                     |
-| ----------------------------------- | ------- | ----------------------------------------------------------------------- |
-| `express`                           | `^5.1.0`  | The de-facto standard for building web servers in Node.js.              |
-| `@cashfreepayments/cashfree-js`     | `^1.0.5`  | The official CashFree frontend SDK for rendering the checkout popup.    |
-| `axios`                             | `^1.10.0` | Promise-based HTTP client. Used for direct backend API calls to CashFree. |
-| `cors`                              | `^2.8.5`  | Enables Cross-Origin Resource Sharing, essential for local development. |
-| `dotenv`                            | `^17.0.0` | Loads environment variables from a `.env` file for secure configuration. |
-| `nodemon`                           | `^3.1.10` | (Dev dependency) Automatically restarts the server on file changes.     |
+### 🏛️ Architectural Patterns
 
-### Technology Decision Matrix
+#### Model-View-Controller (MVC) Architecture
 
-| Decision | Options Considered | Chosen | Rationale |
-|----------|-------------------|---------|-----------|
-| Backend Framework | Express, Fastify, Koa | Express | Mature ecosystem, extensive middleware support |
-| HTTP Client | Native fetch, axios, cashfree-pg | axios | Better error handling, timeout control |
-| Frontend | React/Vue SPA, Vanilla JS | Vanilla JS | Simplicity, no build step required |
-| Data Storage | MongoDB, PostgreSQL, File System | File System | Proof of concept, easy to understand |
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│     VIEW        │    │   CONTROLLER    │    │     MODEL       │
+│                 │    │                 │    │                 │
+│ • index.html    │◄──►│ • server.js     │◄──►│ • creditManager │
+│ • success.html  │    │ • payment.js    │    │ • credits.json  │
+│ • failure.html  │    │ • middleware    │    │ • data logic    │
+│                 │    │                 │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
 
-## 3. Project Setup (In-Depth)
+#### Event-Driven Architecture
 
-### Prerequisites
--   Node.js (v14 or higher) & npm
--   A CashFree Merchant Account with API credentials
--   Basic understanding of async/await JavaScript
--   Text editor (VS Code recommended)
+```
+Payment Events Flow:
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   User      │───►│  Frontend   │───►│   Backend   │───►│  CashFree   │
+│   Action    │    │   Events    │    │   Events    │    │   Events    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+       ▲                   ▲                   ▲                   │
+       │                   │                   │                   │
+       └───────────────────┼───────────────────┼───────────────────┘
+                           │                   │
+                    Status Updates     Webhook Events
+```
 
-### Installation Process
+### 🔄 Key Architectural Decisions
+
+#### Why File-Based Storage for Demo?
+- **Learning Focus**: Eliminates database complexity for educational purposes
+- **Portability**: Runs anywhere without external dependencies
+- **Visibility**: Easy to inspect data during development
+- **Migration Path**: Clear upgrade path to production databases
+
+#### Why Axios over CashFree SDK for Backend?
+- **Timeout Control**: Granular control over request timeouts
+- **Error Handling**: Better error message extraction and handling
+- **Debugging**: Easier to log and inspect HTTP requests
+- **Flexibility**: Can easily switch to different HTTP clients
+
+#### Why Vanilla JavaScript for Frontend?
+- **Simplicity**: No build process or framework complexity
+- **Performance**: Faster loading without framework overhead
+- **Learning**: Clear understanding of underlying concepts
+- **Integration**: Easy to integrate into existing projects
+
+## 2. Core Technologies Deep Dive
+
+### 🛠️ Technology Stack Overview
+
+Our CashFree integration leverages a carefully curated technology stack optimized for performance, security, and developer experience.
+
+#### Core Backend Technologies
+
+| Technology | Version | Purpose | Why Chosen | Alternatives Considered |
+|------------|---------|---------|------------|------------------------|
+| **Node.js** | `18+` | Runtime Environment | • Excellent for I/O intensive operations<br>• Large ecosystem<br>• JavaScript across full stack | Python Flask, Java Spring, .NET Core |
+| **Express.js** | `^5.1.0` | Web Framework | • Minimal overhead<br>• Extensive middleware ecosystem<br>• Industry standard | Fastify, Koa.js, NestJS |
+| **Axios** | `^1.10.0` | HTTP Client | • Promise-based API<br>• Request/Response interceptors<br>• Timeout control<br>• Better error handling | CashFree SDK, Fetch API, Request |
+
+#### Frontend Technologies
+
+| Technology | Version | Purpose | Why Chosen | Alternatives Considered |
+|------------|---------|---------|------------|------------------------|
+| **Vanilla JavaScript** | `ES2020+` | Client-Side Logic | • No build process<br>• Better performance<br>• Easy to understand | React, Vue.js, Angular |
+| **CashFree JS SDK** | `^1.0.5` | Payment Integration | • Official SDK<br>• Popup integration<br>• Event handling | Custom implementation |
+| **CSS3** | `Latest` | Styling | • Modern features<br>• No dependencies<br>• Responsive design | Tailwind CSS, Bootstrap |
+
+#### Supporting Libraries
+
+| Package | Version | Purpose | Configuration |
+|---------|---------|---------|---------------|
+| `cors` | `^2.8.5` | Cross-Origin Resource Sharing | ```javascript<br>app.use(cors({<br>  origin: process.env.NODE_ENV === 'production' ?<br>    ['https://yourdomain.com'] :<br>    true,<br>  credentials: true<br>}));<br>``` |
+| `dotenv` | `^17.0.0` | Environment Variables | ```javascript<br>require('dotenv').config({<br>  path: process.env.NODE_ENV === 'production' ?<br>    '.env.production' : '.env'<br>});<br>``` |
+| `nodemon` | `^3.1.10` | Development Server | ```json<br>{<br>  "scripts": {<br>    "dev": "nodemon server.js",<br>    "start": "node server.js"<br>  }<br>}<br>``` |
+
+### 🏗️ Architecture Decision Records
+
+#### ADR-001: HTTP Client Selection (Axios vs CashFree SDK)
+
+**Context**: Need to make API calls to CashFree backend services
+
+**Decision**: Use Axios instead of official CashFree backend SDK
+
+**Rationale**:
+```javascript
+// Axios Advantages
+const axiosConfig = {
+  timeout: 5000,           // Granular timeout control
+  retry: 3,                // Custom retry logic
+  validateStatus: (status) => status < 500,  // Custom status validation
+  transformResponse: [     // Response transformation
+    (data) => {
+      // Custom error handling
+      if (data.error) {
+        throw new PaymentError(data.error.message);
+      }
+      return JSON.parse(data);
+    }
+  ]
+};
+```
+
+**Consequences**:
+- ✅ Better error handling and debugging
+- ✅ More control over request/response lifecycle
+- ✅ Easier to implement fast-failure detection
+- ❌ Need to implement more boilerplate code
+- ❌ Manual API endpoint management
+
+#### ADR-002: Frontend Framework Selection
+
+**Context**: Need to build payment checkout interface
+
+**Decision**: Use Vanilla JavaScript instead of React/Vue
+
+**Rationale**:
+```javascript
+// Vanilla JS Benefits for Payment Integration
+const checkoutForm = {
+  // Direct DOM manipulation for critical payment forms
+  validateInRealTime: () => {
+    // No framework overhead during payment validation
+    const isValid = validatePaymentForm();
+    updateUIImmediately(isValid);
+  },
+  
+  // No build process means faster development cycles
+  handleSDKEvents: () => {
+    // Direct access to CashFree SDK events
+    cashfree.onSuccess = handlePaymentSuccess;
+    cashfree.onFailure = handlePaymentFailure;
+  }
+};
+```
+
+**Consequences**:
+- ✅ No build process complexity
+- ✅ Faster page load times
+- ✅ Direct SDK integration
+- ✅ Easier to debug payment flows
+- ❌ More verbose code for complex UIs
+- ❌ Manual state management
+
+### 📦 Package.json Deep Dive
+
+```json
+{
+  "name": "cashfree-checkout-integration",
+  "version": "1.0.0",
+  "description": "Production-ready CashFree payment integration",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js --ignore data/",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest tests/unit/",
+    "test:integration": "jest tests/integration/",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write .",
+    "security-audit": "npm audit --audit-level moderate",
+    "build": "echo 'No build step required for vanilla JS'",
+    "deploy": "npm run security-audit && npm start"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "helmet": "^7.0.0",           // Security headers
+    "express-rate-limit": "^6.8.0", // Rate limiting
+    "express-validator": "^7.0.1"   // Input validation
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3",
+    "eslint": "^8.42.0",
+    "prettier": "^2.8.8"
+  },
+  "keywords": [
+    "cashfree",
+    "payment-gateway",
+    "checkout",
+    "nodejs",
+    "express"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/cashfree-checkout.git"
+  },
+  "license": "MIT",
+  "funding": {
+    "type": "individual",
+    "url": "https://github.com/sponsors/yourusername"
+  }
+}
+```
+
+### 🔧 Development Tools Configuration
+
+#### ESLint Configuration (.eslintrc.js)
+```javascript
+module.exports = {
+  env: {
+    node: true,
+    es2021: true,
+    jest: true
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:security/recommended'
+  ],
+  parserOptions: {
+    ecmaVersion: 12,
+    sourceType: 'module'
+  },
+  rules: {
+    // Payment-specific security rules
+    'no-eval': 'error',
+    'no-implied-eval': 'error',
+    'no-new-func': 'error',
+    'security/detect-object-injection': 'error',
+    'security/detect-sql-injection': 'error'
+  }
+};
+```
+
+#### Prettier Configuration (.prettierrc)
+```json
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false
+}
+```
+
+## 3. Complete Project Setup Guide
+
+### 🔧 Prerequisites & Environment Setup
+
+#### System Requirements
+```bash
+# Check your system meets requirements
+node --version    # Should be >= 18.0.0
+npm --version     # Should be >= 8.0.0
+git --version     # Should be >= 2.0.0
+
+# Recommended global packages
+npm install -g nodemon     # For development
+npm install -g pm2         # For production
+```
+
+#### CashFree Account Setup
+
+Before starting development, you need a CashFree merchant account:
+
+1. **Create Account**: Visit [CashFree Merchant Dashboard](https://merchant.cashfree.com/)
+2. **Complete KYC**: Submit required business documents
+3. **Get API Credentials**: Navigate to Developers → API Keys
+
+#### Environment Setup Checklist
 
 ```bash
-# 1. Clone the repository (if from Git)
-git clone <repository-url>
-cd cashfreeCheckout
+# ✅ Development Environment Checklist
+□ Node.js 18+ installed
+□ Git configured with SSH keys
+□ Code editor (VS Code recommended) with extensions:
+  □ ES6 String HTML
+  □ Prettier
+  □ ESLint
+  □ REST Client (for API testing)
+□ CashFree merchant account created
+□ API credentials obtained (App ID & Secret Key)
+□ ngrok installed (for webhook testing)
+```
 
-# 2. Verify Node.js version
-node --version  # Should be v14 or higher
+### 📥 Installation & Configuration
 
-# 3. Install all dependencies from package.json
-npm install
+#### Step 1: Project Initialization
 
-# 4. Verify installation
+```bash
+# Option A: Clone from repository
+git clone https://github.com/yourusername/cashfree-checkout.git
+cd cashfree-checkout
+
+# Option B: Create from scratch
+mkdir cashfree-checkout
+cd cashfree-checkout
+npm init -y
+```
+
+#### Step 2: Dependency Installation
+
+```bash
+# Install production dependencies
+npm install express@^5.1.0 \
+           axios@^1.10.0 \
+           cors@^2.8.5 \
+           dotenv@^17.0.0 \
+           helmet@^7.0.0 \
+           express-rate-limit@^6.8.0
+
+# Install development dependencies
+npm install --save-dev nodemon@^3.1.10 \
+                       jest@^29.5.0 \
+                       supertest@^6.3.3 \
+                       eslint@^8.42.0 \
+                       prettier@^2.8.8
+
+# Verify installation
 npm list --depth=0
 ```
 
-### Project Initialization Sequence
+#### Step 3: Project Structure Creation
 
-When you run `npm install`, the following happens:
+```bash
+# Create directory structure
+mkdir -p {data,public,routes,tests/{unit,integration},docs}
+mkdir -p public/{css,js,images}
+mkdir -p logs
 
-1. **Package Resolution**: npm reads `package.json` and resolves all dependencies
-2. **Dependency Tree**: Creates a dependency tree and checks for conflicts
-3. **Download**: Downloads packages from npm registry
-4. **Installation**: Installs packages in `node_modules/`
-5. **Audit**: Runs security audit on installed packages
+# Create essential files
+touch server.js
+touch routes/payment.js
+touch creditManager.js
+touch .env
+touch .env.example
+touch .gitignore
+touch README.md
+```
 
-### Configuration (.env) Explained
+### 🔐 Environment Variables Master Guide
+
+#### .env File Structure
+
+```bash
+# =====================================
+# CashFree Payment Gateway Configuration
+# =====================================
+
+# CRITICAL: CashFree API Credentials
+# Get these from: https://merchant.cashfree.com/developers/api-keys
+CASHFREE_APP_ID="YOUR_APP_ID_HERE"
+CASHFREE_SECRET_KEY="YOUR_SECRET_KEY_HERE"
+
+# Environment: SANDBOX (testing) or PRODUCTION (live payments)
+CASHFREE_ENVIRONMENT="SANDBOX"
+
+# =====================================
+# Server Configuration
+# =====================================
+
+# Port for local development
+PORT=3000
+
+# Node.js environment
+NODE_ENV="development"
+
+# =====================================
+# URL Configuration
+# =====================================
+
+# Base URL for your application
+BASE_URL="http://localhost:3000"
+
+# Return URL after payment completion
+RETURN_URL="http://localhost:3000/success"
+
+# Webhook URL for payment notifications
+# For local development, use ngrok: https://ngrok.com/
+# Example: NOTIFY_URL="https://abc123.ngrok.io/api/payment/webhook"
+NOTIFY_URL="http://localhost:3000/api/payment/webhook"
+
+# =====================================
+# Security Configuration
+# =====================================
+
+# Enable webhook signature verification (CRITICAL for production)
+WEBHOOK_VERIFICATION_ENABLED=true
+
+# Rate limiting (requests per window)
+RATE_LIMIT_WINDOW_MS=900000  # 15 minutes
+RATE_LIMIT_MAX_REQUESTS=100  # 100 requests per window
+
+# =====================================
+# Logging & Monitoring
+# =====================================
+
+# Log level: error, warn, info, debug
+LOG_LEVEL="debug"
+
+# Enable detailed request logging
+ENABLE_REQUEST_LOGGING=true
+
+# Log file path
+LOG_FILE_PATH="./logs/app.log"
+
+# =====================================
+# Database Configuration (for production)
+# =====================================
+
+# When migrating from file storage to database
+# DATABASE_URL="postgresql://user:password@localhost:5432/cashfree_db"
+# DATABASE_SSL=false
+
+# =====================================
+# Email Configuration (optional)
+# =====================================
+
+# For sending payment notifications
+# SMTP_HOST="smtp.gmail.com"
+# SMTP_PORT=587
+# SMTP_USER="your-email@gmail.com"
+# SMTP_PASS="your-app-password"
+
+# =====================================
+# Third-party Integrations (optional)
+# =====================================
+
+# Error tracking
+# SENTRY_DSN="https://your-sentry-dsn@sentry.io/project-id"
+
+# Analytics
+# GOOGLE_ANALYTICS_ID="GA-XXXXXXXXX"
+```
+
+#### .env.example (Template)
+
+```bash
+# Copy this file to .env and fill in your actual values
+# Never commit .env to version control
+
+# CashFree Credentials (Required)
+CASHFREE_APP_ID="TEST_APP_ID_12345"
+CASHFREE_SECRET_KEY="TEST_SECRET_KEY_67890"
+CASHFREE_ENVIRONMENT="SANDBOX"
+
+# Server Configuration
+PORT=3000
+NODE_ENV="development"
+
+# URLs
+BASE_URL="http://localhost:3000"
+RETURN_URL="http://localhost:3000/success"
+NOTIFY_URL="http://localhost:3000/api/payment/webhook"
+
+# Security
+WEBHOOK_VERIFICATION_ENABLED=true
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Logging
+LOG_LEVEL="debug"
+ENABLE_REQUEST_LOGGING=true
+LOG_FILE_PATH="./logs/app.log"
+```
+
+### 🔍 Environment Validation System
+
+```javascript
+// config/environmentValidator.js
+class EnvironmentValidator {
+  constructor() {
+    this.requiredVars = [
+      'CASHFREE_APP_ID',
+      'CASHFREE_SECRET_KEY',
+      'CASHFREE_ENVIRONMENT'
+    ];
+    
+    this.optionalVars = [
+      'PORT',
+      'NODE_ENV',
+      'BASE_URL',
+      'RETURN_URL',
+      'NOTIFY_URL'
+    ];
+  }
+
+  validate() {
+    console.log('🔍 Validating environment configuration...');
+    
+    // Check required variables
+    const missing = this.requiredVars.filter(key => !process.env[key]);
+    if (missing.length > 0) {
+      this.handleMissingVariables(missing);
+    }
+
+    // Validate specific values
+    this.validateCashFreeEnvironment();
+    this.validateCredentialFormat();
+    this.validateUrls();
+    this.validateSecuritySettings();
+
+    console.log('✅ Environment validation passed');
+    this.logConfiguration();
+  }
+
+  handleMissingVariables(missing) {
+    console.error('❌ Missing required environment variables:');
+    missing.forEach(key => {
+      console.error(`   - ${key}`);
+    });
+    
+    console.error('\n💡 Setup Guide:');
+    console.error('   1. Copy .env.example to .env');
+    console.error('   2. Get credentials from CashFree Dashboard');
+    console.error('   3. Fill in all required variables');
+    
+    process.exit(1);
+  }
+
+  validateCashFreeEnvironment() {
+    const validEnvs = ['SANDBOX', 'PRODUCTION'];
+    const env = process.env.CASHFREE_ENVIRONMENT;
+    
+    if (!validEnvs.includes(env)) {
+      console.error('❌ Invalid CASHFREE_ENVIRONMENT');
+      console.error(`   Expected: ${validEnvs.join(' or ')}`);
+      console.error(`   Received: ${env}`);
+      process.exit(1);
+    }
+
+    if (env === 'PRODUCTION') {
+      this.validateProductionSettings();
+    }
+  }
+
+  validateCredentialFormat() {
+    const appId = process.env.CASHFREE_APP_ID;
+    const secretKey = process.env.CASHFREE_SECRET_KEY;
+
+    if (appId.length < 10) {
+      console.warn('⚠️  CASHFREE_APP_ID seems too short (expected 10+ chars)');
+    }
+
+    if (secretKey.length < 20) {
+      console.warn('⚠️  CASHFREE_SECRET_KEY seems too short (expected 20+ chars)');
+    }
+
+    if (appId.includes('TEST') && process.env.CASHFREE_ENVIRONMENT === 'PRODUCTION') {
+      console.error('❌ Test credentials detected in PRODUCTION environment');
+      process.exit(1);
+    }
+  }
+
+  validateUrls() {
+    const urls = ['BASE_URL', 'RETURN_URL', 'NOTIFY_URL'];
+    
+    urls.forEach(urlKey => {
+      const url = process.env[urlKey];
+      if (url && !this.isValidUrl(url)) {
+        console.warn(`⚠️  ${urlKey} appears to be invalid: ${url}`);
+      }
+    });
+  }
+
+  validateSecuritySettings() {
+    if (process.env.NODE_ENV === 'production') {
+      if (process.env.WEBHOOK_VERIFICATION_ENABLED !== 'true') {
+        console.error('❌ Webhook verification MUST be enabled in production');
+        process.exit(1);
+      }
+
+      if (!process.env.NOTIFY_URL || process.env.NOTIFY_URL.includes('localhost')) {
+        console.error('❌ Production webhook URL cannot be localhost');
+        process.exit(1);
+      }
+    }
+  }
+
+  validateProductionSettings() {
+    console.warn('🚨 PRODUCTION MODE DETECTED');
+    console.warn('   - Ensure you have production CashFree credentials');
+    console.warn('   - Verify webhook URLs are publicly accessible');
+    console.warn('   - Enable all security features');
+    console.warn('   - Test thoroughly in SANDBOX first');
+  }
+
+  isValidUrl(string) {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  logConfiguration() {
+    console.log('\n📋 Current Configuration:');
+    console.log(`   Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
+    console.log(`   App ID: ${process.env.CASHFREE_APP_ID.substring(0, 8)}...`);
+    console.log(`   Port: ${process.env.PORT || 3000}`);
+    console.log(`   Node Env: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`   Base URL: ${process.env.BASE_URL || 'http://localhost:3000'}`);
+  }
+}
+
+module.exports = EnvironmentValidator;
+```
+
+### 🎯 Quick Start Commands
+
+```bash
+# Development setup (one-time)
+npm run setup
+
+# Start development server
+npm run dev
+
+# Start production server
+npm start
+
+# Run tests
+npm test
+
+# Security audit
+npm run security-audit
+
+# Code formatting
+npm run format
+
+# Deploy to production
+npm run deploy
+```
+npm list --depth=0
+```
+
+### Environment Variables Master Guide
 
 Create a `.env` file in the project root. This file is ignored by Git and is the correct place for all your secrets.
 
@@ -172,1760 +796,986 @@ DEBUG_MODE=true
 LOG_LEVEL=verbose
 ```
 
-### Environment Variable Validation
+### CashFree Account Setup
+1.  **Create a CashFree Account**: Sign up at [CashFree](https://www.cashfree.com/).
+2.  **Get API Credentials**: Navigate to Developers -> API Keys in the dashboard.
+3.  **Set Up Webhook**: Configure a webhook URL in the CashFree dashboard for payment notifications.
+4.  **Enable Sandbox Mode**: Ensure your account is in Sandbox mode for testing.
 
-The system validates environment variables on startup:
+### Project Initialization Sequence
+
+When you run `npm install`, the following happens:
+
+1. **Package Resolution**: npm reads `package.json` and resolves all dependencies
+2. **Dependency Tree**: Creates a dependency tree and checks for conflicts
+3. **Download**: Downloads packages from npm registry
+4. **Installation**: Installs packages in `node_modules/`
+5. **Audit**: Runs security audit on installed packages
+
+## 4. System Architecture & Design Patterns
+
+### 🏗️ High-Level Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND LAYER                                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Browser (Client)                                                           │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │   index.html    │  │  success.html   │  │  failure.html   │             │
+│  │   (Checkout)    │  │   (Success)     │  │   (Failure)     │             │
+│  │                 │  │                 │  │                 │             │
+│  │ • Form UI       │  │ • Success UI    │  │ • Error UI      │             │
+│  │ • Validation    │  │ • Transaction   │  │ • Retry Options │             │
+│  │ • SDK Loading   │  │   Details       │  │ • Support Info  │             │
+│  │ • Status Poll   │  │                 │  │                 │             │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
+│           │                      ▲                      ▲                   │
+│           │                      │                      │                   │
+│           ▼                      │                      │                   │
+│  ┌─────────────────────────────────────────────────────────────────────────┤
+│  │                       CashFree JS SDK                                   │
+│  │  • Popup Management  • Event Handling  • Payment Processing            │
+│  └─────────────────────────────────────────────────────────────────────────┤
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                      ▲                      ▲
+           │ HTTPS/API Calls      │ Redirects            │ Webhook Events
+           ▼                      │                      │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND LAYER                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Express.js Server (Node.js)                                               │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │   server.js     │  │ routes/payment  │  │ creditManager   │             │
+│  │                 │  │                 │  │                 │             │
+│  │ • App Setup     │  │ • Order Create  │  │ • Data Layer    │             │
+│  │ • Middleware    │  │ • Status Check  │  │ • File I/O      │             │
+│  │ • Route Setup   │  │ • Webhook       │  │ • Validation    │             │
+│  │ • Error Handle  │  │ • Security      │  │ • Concurrency   │             │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
+│           │                      │                      │                   │
+│           │                      ▼                      ▼                   │
+│           │          ┌─────────────────────────────────────────────────────┤
+│           │          │                Data Storage                         │
+│           │          │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
+│           │          │  │ credits.json│  │  logs/      │  │  temp/      │ │
+│           │          │  │ • Payments  │  │ • Requests  │  │ • Sessions  │ │
+│           │          │  │ • Orders    │  │ • Errors    │  │ • Cache     │ │
+│           │          │  │ • Failures  │  │ • Analytics │  │             │ │
+│           │          │  └─────────────┘  └─────────────┘  └─────────────┘ │
+│           │          └─────────────────────────────────────────────────────┤
+└─────────────────────────────────────────────────────────────────────────────┘
+           │
+           │ HTTPS API Calls
+           ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CASHFREE SERVICES                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
+│  │   Order API     │  │  Payment API    │  │   Webhook API   │             │
+│  │                 │  │                 │  │                 │             │
+│  │ • Create Order  │  │ • Process Pay   │  │ • Send Events   │             │
+│  │ • Get Status    │  │ • Handle Cards  │  │ • Retry Logic   │             │
+│  │ • Update State  │  │ • UPI, NetBank  │  │ • Signatures    │             │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 🎯 Design Patterns Implementation
+
+#### 1. **Model-View-Controller (MVC) Pattern**
 
 ```javascript
-// Environment validation happens in server.js
-function validateEnvironment() {
-    const required = ['CASHFREE_APP_ID', 'CASHFREE_SECRET_KEY', 'CASHFREE_ENVIRONMENT'];
-    const missing = required.filter(key => !process.env[key]);
-    
-    if (missing.length > 0) {
-        console.error('❌ Missing required environment variables:', missing.join(', '));
-        process.exit(1);
-    }
-    
-    if (!['SANDBOX', 'PRODUCTION'].includes(process.env.CASHFREE_ENVIRONMENT)) {
-        console.error('❌ CASHFREE_ENVIRONMENT must be either SANDBOX or PRODUCTION');
-        process.exit(1);
-    }
-    
-    console.log('✅ Environment validation passed');
+// MODEL: Data Layer (creditManager.js)
+class CreditManager {
+  // Handles all data operations
+  // Abstracts storage mechanism
+  // Provides business logic
+}
+
+// VIEW: Presentation Layer (public/*.html)
+const CheckoutView = {
+  // User interface components
+  // Form validation and feedback
+  // Event handling
+};
+
+// CONTROLLER: Logic Layer (routes/payment.js)
+const PaymentController = {
+  // Orchestrates business operations
+  // Handles API requests/responses
+  // Manages payment flow
+};
+```
+
+#### 2. **Repository Pattern**
+
+```javascript
+// Abstract data access
+class PaymentRepository {
+  async createOrder(orderData) {
+    // Abstract order creation
+  }
+  
+  async getOrderStatus(orderId) {
+    // Abstract status retrieval
+  }
+  
+  async recordPayment(paymentData) {
+    // Abstract payment recording
+  }
+}
+
+// File-based implementation
+class FilePaymentRepository extends PaymentRepository {
+  constructor() {
+    this.creditManager = new CreditManager();
+  }
+  
+  async createOrder(orderData) {
+    return this.creditManager.addOrder(orderData);
+  }
+}
+
+// Database implementation (for production)
+class DatabasePaymentRepository extends PaymentRepository {
+  constructor(dbConnection) {
+    this.db = dbConnection;
+  }
+  
+  async createOrder(orderData) {
+    return this.db.orders.create(orderData);
+  }
 }
 ```
 
-**To run:**
--   Development: `npm run dev` (uses nodemon for auto-restart)
--   Production: `npm start` (uses node directly)
-
-## 4. Architectural Deep Dive
-
-### Project Structure (Detailed)
-
-```
-cashfreeCheckout/
-├── data/
-│   └── credits.json              # JSON database for payment records
-├── public/                       # Static files served to browser
-│   ├── home.html                 # Landing page with navigation
-│   ├── index.html                # Main checkout SPA
-│   ├── success.html              # Success page with transaction details
-│   ├── failure.html              # Failure page with error handling
-│   ├── cashfree-backup.js        # Local SDK fallback
-│   └── styles/                   # CSS files (if any)
-├── routes/
-│   └── payment.js                # Payment API endpoints
-├── .env                          # Environment configuration
-├── .gitignore                    # Git ignore rules
-├── creditManager.js              # Data access layer
-├── server.js                     # Express server setup
-├── package.json                  # Project metadata and dependencies
-├── package-lock.json             # Locked dependency versions
-├── README.md                     # Basic project documentation
-└── Everything.md                 # This comprehensive guide
-```
-
-### Data Flow & Logic Separation
-
-The architecture follows the **MVC (Model-View-Controller)** pattern with clear separation:
-
-#### Model Layer (`creditManager.js`)
-- Handles all data operations
-- Manages file I/O for credits.json
-- Implements data validation and integrity checks
-- Provides abstraction over storage mechanism
-
-#### View Layer (`public/*.html`)
-- User interface components
-- Client-side JavaScript for UI interactions
-- Form validation and user feedback
-- SDK integration and event handling
-
-#### Controller Layer (`routes/payment.js`)
-- Business logic orchestration
-- API request/response handling
-- Integration with CashFree APIs
-- Error handling and logging
-
-#### Server Layer (`server.js`)
-- Application initialization
-- Middleware configuration
-- Route registration
-- Global error handling
-
-## 5. Complete System Initialization Process
-
-### Server Startup Sequence (Detailed)
-
-When you run `npm start` or `npm run dev`, here's exactly what happens:
+#### 3. **Factory Pattern for Environment Configuration**
 
 ```javascript
-// server.js - Complete startup sequence
+// ConfigFactory.js
+class ConfigFactory {
+  static create(environment) {
+    switch (environment) {
+      case 'SANDBOX':
+        return new SandboxConfig();
+      case 'PRODUCTION':
+        return new ProductionConfig();
+      default:
+        throw new Error(`Unknown environment: ${environment}`);
+    }
+  }
+}
 
-// PHASE 1: Environment Setup
-console.log('🚀 Starting CashFree Checkout Server...');
+class SandboxConfig {
+  getBaseUrl() {
+    return 'https://sandbox.cashfree.com/pg';
+  }
+  
+  getWebhookConfig() {
+    return {
+      verifySignature: false,  // Relaxed for testing
+      timeout: 10000
+    };
+  }
+}
 
-// Load environment variables first
-require('dotenv').config();
-console.log('📋 Environment variables loaded');
+class ProductionConfig {
+  getBaseUrl() {
+    return 'https://api.cashfree.com/pg';
+  }
+  
+  getWebhookConfig() {
+    return {
+      verifySignature: true,   // Strict for production
+      timeout: 5000
+    };
+  }
+}
+```
 
-// Validate critical environment variables
-validateEnvironment();
+## 5. Server Implementation Masterclass
 
-// PHASE 2: Dependency Loading
+### 🚀 Express Server Deep Dive
+
+Our Express server is the backbone of the payment system, handling everything from request routing to error management. Let's break down every component:
+
+#### Core Server Architecture
+
+```javascript
+// server.js - Production-ready implementation
+
+// ============================================================================
+// PHASE 1: IMPORTS AND ENVIRONMENT SETUP
+// ============================================================================
+
+// Core dependencies
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
+// Environment configuration
+require('dotenv').config();
+
+// Custom modules
 const paymentRoutes = require('./routes/payment');
+const EnvironmentValidator = require('./config/environmentValidator');
+const SecurityMiddleware = require('./middleware/security');
+const LoggingMiddleware = require('./middleware/logging');
 
-console.log('📦 Dependencies loaded');
+// ============================================================================
+// PHASE 2: APPLICATION INITIALIZATION
+// ============================================================================
 
-// PHASE 3: Express App Initialization
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-console.log('⚡ Express app initialized');
-
-// PHASE 4: Middleware Configuration (ORDER MATTERS!)
-// CORS must be first to handle preflight requests
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? ['https://yourdomain.com'] 
-        : ['http://localhost:3000'],
-    credentials: true
-}));
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Request logging middleware (development only)
-if (process.env.NODE_ENV !== 'production') {
-    app.use((req, res, next) => {
-        console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-        next();
-    });
-}
-
-console.log('🔧 Middleware configured');
-
-// PHASE 5: Route Registration
-// API routes MUST be registered before static middleware
-app.use('/api/payment', paymentRoutes);
-
-// Explicit page routes
-app.get('/', (req, res) => {
-    console.log('📄 Serving home page');
-    res.sendFile(path.join(__dirname, 'public', 'home.html'));
-});
-
-app.get('/checkout', (req, res) => {
-    console.log('💳 Serving checkout page');
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/success', (req, res) => {
-    console.log('✅ Serving success page');
-    res.sendFile(path.join(__dirname, 'public', 'success.html'));
-});
-
-app.get('/failure', (req, res) => {
-    console.log('❌ Serving failure page');
-    res.sendFile(path.join(__dirname, 'public', 'failure.html'));
-});
-
-// Static file serving (MUST be last)
-app.use(express.static(path.join(__dirname, 'public')));
-
-console.log('🛣️  Routes registered');
-
-// PHASE 6: Global Error Handler
-app.use((err, req, res, next) => {
-    console.error('🚨 Global error handler:', err);
-    res.status(500).json({
-        success: false,
-        error: process.env.NODE_ENV === 'production' 
-            ? 'Internal server error' 
-            : err.message
-    });
-});
-
-// PHASE 7: Server Start
-app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`🌍 Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
-    console.log(`📊 Debug mode: ${process.env.DEBUG_MODE || 'false'}`);
-    console.log('🎉 Ready to accept payments!');
-});
-```
-
-### Environment Validation Details
-
-```javascript
-function validateEnvironment() {
+class CashFreeServer {
+  constructor() {
+    this.app = express();
+    this.PORT = process.env.PORT || 3000;
+    this.NODE_ENV = process.env.NODE_ENV || 'development';
+    
+    // Initialize application
+    this.initialize();
+  }
+  
+  async initialize() {
+    console.log('🚀 Initializing CashFree Checkout Server...');
+    
+    try {
+      // Validate environment first
+      await this.validateEnvironment();
+      
+      // Setup logging
+      this.setupLogging();
+      
+      // Configure security
+      this.configureSecurity();
+      
+      // Setup middleware chain
+      this.setupMiddleware();
+      
+      // Configure routes
+      this.setupRoutes();
+      
+      // Setup error handling
+      this.setupErrorHandling();
+      
+      // Start server
+      await this.startServer();
+      
+    } catch (error) {
+      console.error('❌ Server initialization failed:', error);
+      process.exit(1);
+    }
+  }
+  
+  // ============================================================================
+  // PHASE 3: ENVIRONMENT VALIDATION
+  // ============================================================================
+  
+  async validateEnvironment() {
     console.log('🔍 Validating environment configuration...');
     
-    // Required variables
-    const required = [
-        'CASHFREE_APP_ID',
-        'CASHFREE_SECRET_KEY', 
-        'CASHFREE_ENVIRONMENT'
+    const validator = new EnvironmentValidator();
+    validator.validate();
+    
+    // Create necessary directories
+    this.createDirectories();
+    
+    console.log('✅ Environment validation completed');
+  }
+  
+  createDirectories() {
+    const directories = [
+      'data',
+      'logs',
+      'temp',
+      'public/uploads'
     ];
     
-    const missing = required.filter(key => !process.env[key]);
-    
-    if (missing.length > 0) {
-        console.error('❌ Missing required environment variables:');
-        missing.forEach(key => console.error(`   - ${key}`));
-        console.error('💡 Please check your .env file');
-        process.exit(1);
-    }
-    
-    // Validate environment value
-    const validEnvs = ['SANDBOX', 'PRODUCTION'];
-    if (!validEnvs.includes(process.env.CASHFREE_ENVIRONMENT)) {
-        console.error('❌ Invalid CASHFREE_ENVIRONMENT value');
-        console.error(`   Expected: ${validEnvs.join(' or ')}`);
-        console.error(`   Received: ${process.env.CASHFREE_ENVIRONMENT}`);
-        process.exit(1);
-    }
-    
-    // Validate API credentials format (basic check)
-    if (process.env.CASHFREE_APP_ID.length < 10) {
-        console.warn('⚠️  CASHFREE_APP_ID seems too short');
-    }
-    
-    if (process.env.CASHFREE_SECRET_KEY.length < 20) {
-        console.warn('⚠️  CASHFREE_SECRET_KEY seems too short');
-    }
-    
-    console.log('✅ Environment validation passed');
-    console.log(`   Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
-    console.log(`   App ID: ${process.env.CASHFREE_APP_ID.substring(0, 8)}...`);
-}
-```
-
-### Middleware Loading Order (Critical)
-
-The order of middleware in Express is crucial. Here's why:
-
-```javascript
-// CORRECT ORDER:
-
-// 1. CORS - Must be first to handle preflight requests
-app.use(cors());
-
-// 2. Body parsing - Needed before any route that reads req.body
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// 3. Logging - After body parsing to log complete requests
-app.use(requestLogger);
-
-// 4. API Routes - Before static middleware to take precedence
-app.use('/api/payment', paymentRoutes);
-
-// 5. Page Routes - Explicit routes for better control
-app.get('/', serveHomePage);
-
-// 6. Static Files - MUST be last as it's a catch-all
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 7. Error Handler - Always last
-app.use(globalErrorHandler);
-```
-
-## 6. Backend Implementation (Line-by-Line)
-
-### The Server (`server.js`) - Complete Implementation
-
-```javascript
-// server.js - The heart of our backend
-
-// IMPORTS AND ENVIRONMENT SETUP
-const express = require('express');           // Web framework
-const cors = require('cors');                 // Cross-origin resource sharing
-const path = require('path');                 // File path utilities
-require('dotenv').config();                   // Load environment variables
-
-// Import our custom modules
-const paymentRoutes = require('./routes/payment');
-
-// CONFIGURATION CONSTANTS
-const app = express();
-const PORT = process.env.PORT || 3000;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-
-// UTILITY FUNCTIONS
-function validateEnvironment() {
-    const required = ['CASHFREE_APP_ID', 'CASHFREE_SECRET_KEY', 'CASHFREE_ENVIRONMENT'];
-    const missing = required.filter(key => !process.env[key]);
-    
-    if (missing.length > 0) {
-        console.error('❌ Missing environment variables:', missing.join(', '));
-        process.exit(1);
-    }
-    
-    if (!['SANDBOX', 'PRODUCTION'].includes(process.env.CASHFREE_ENVIRONMENT)) {
-        console.error('❌ Invalid CASHFREE_ENVIRONMENT. Use SANDBOX or PRODUCTION');
-        process.exit(1);
-    }
-}
-
-function logRequest(req, res, next) {
-    const timestamp = new Date().toISOString();
-    const method = req.method.padEnd(4);
-    const url = req.url;
-    const ip = req.ip || req.connection.remoteAddress;
-    
-    console.log(`[${timestamp}] ${method} ${url} - ${ip}`);
-    next();
-}
-
-// INITIALIZATION
-console.log('🚀 Initializing CashFree Checkout Server...');
-validateEnvironment();
-
-// MIDDLEWARE CONFIGURATION
-app.use(cors({
-    origin: NODE_ENV === 'production' ? false : true, // Configure for production
-    credentials: true
-}));
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Development logging
-if (NODE_ENV !== 'production') {
-    app.use(logRequest);
-}
-
-// HEALTH CHECK ENDPOINT
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'healthy',
-        environment: process.env.CASHFREE_ENVIRONMENT,
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
+    directories.forEach(dir => {
+      const dirPath = path.join(__dirname, dir);
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+        console.log(`📁 Created directory: ${dir}`);
+      }
     });
-});
-
-// API ROUTES
-app.use('/api/payment', paymentRoutes);
-
-// PAGE ROUTES
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'home.html'));
-});
-
-app.get('/checkout', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/success', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'success.html'));
-});
-
-app.get('/failure', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'failure.html'));
-});
-
-// STATIC FILE SERVING
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 404 HANDLER
-app.use('*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        error: 'Endpoint not found',
-        path: req.originalUrl
+  }
+  
+  // ============================================================================
+  // PHASE 4: LOGGING CONFIGURATION
+  // ============================================================================
+  
+  setupLogging() {
+    console.log('📋 Setting up logging system...');
+    
+    // Request logging middleware
+    this.app.use((req, res, next) => {
+      const timestamp = new Date().toISOString();
+      const method = req.method.padEnd(6);
+      const url = req.url;
+      const ip = req.ip || req.connection.remoteAddress;
+      const userAgent = req.get('User-Agent') || 'Unknown';
+      
+      console.log(`[${timestamp}] ${method} ${url} - ${ip} - ${userAgent}`);
+      
+      // Log to file in production
+      if (this.NODE_ENV === 'production') {
+        this.logToFile({
+          timestamp,
+          method: req.method,
+          url,
+          ip,
+          userAgent,
+          headers: req.headers
+        });
+      }
+      
+      next();
     });
-});
-
-// GLOBAL ERROR HANDLER
-app.use((err, req, res, next) => {
-    console.error('🚨 Global error handler:', err);
-    res.status(500).json({
-        success: false,
-        error: process.env.NODE_ENV === 'production' 
-            ? 'Internal server error' 
-            : err.message
+    
+    console.log('✅ Logging system configured');
+  }
+  
+  logToFile(logData) {
+    const logFile = path.join(__dirname, 'logs', 'access.log');
+    const logEntry = JSON.stringify(logData) + '\n';
+    
+    fs.appendFile(logFile, logEntry, (err) => {
+      if (err) {
+        console.error('Failed to write to log file:', err);
+      }
     });
-});
-
-// GRACEFUL SHUTDOWN
-process.on('SIGTERM', () => {
-    console.log('🛑 SIGTERM received, shutting down gracefully');
-    server.close(() => {
-        console.log('✅ Process terminated');
+  }
+  
+  // ============================================================================
+  // PHASE 5: SECURITY CONFIGURATION
+  // ============================================================================
+  
+  configureSecurity() {
+    console.log('🔒 Configuring security middleware...');
+    
+    // Basic security headers
+    this.app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            "https://sdk.cashfree.com",
+            "'unsafe-inline'" // For inline scripts (consider removing in production)
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: [
+            "'self'",
+            "https://api.cashfree.com",
+            "https://sandbox.cashfree.com"
+          ],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          upgradeInsecureRequests: this.NODE_ENV === 'production' ? [] : null
+        }
+      },
+      hsts: this.NODE_ENV === 'production' ? {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+      } : false
+    }));
+    
+    // CORS configuration
+    this.app.use(cors({
+      origin: this.NODE_ENV === 'production' 
+        ? process.env.ALLOWED_ORIGINS?.split(',') || false
+        : true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-cashfree-signature', 'x-cashfree-timestamp']
+    }));
+    
+    // General rate limiting
+    const generalLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 1000, // Limit each IP to 1000 requests per windowMs
+      message: {
+        error: 'Too many requests',
+        retryAfter: '15 minutes'
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+      handler: (req, res) => {
+        console.warn(`⚠️ Rate limit exceeded for IP: ${req.ip}`);
+        res.status(429).json({
+          success: false,
+          error: 'Too many requests',
+          retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+        });
+      }
     });
-});
-
-// START SERVER
-const server = app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`🌍 Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
-    console.log(`🎉 Ready to process payments!`);
-});
-```
-
-### Payment Routes (`routes/payment.js`) - Complete Implementation
-
-```javascript
-// routes/payment.js - All payment-related API endpoints
-
-const express = require('express');
-const axios = require('axios');
-const crypto = require('crypto');
-const CreditManager = require('../creditManager');
-
-const router = express.Router();
-const creditManager = new CreditManager();
-
-// UTILITY FUNCTIONS
-function getBaseUrl() {
-    return process.env.CASHFREE_ENVIRONMENT === 'PRODUCTION'
-        ? 'https://api.cashfree.com/pg'
-        : 'https://sandbox.cashfree.com/pg';
-}
-
-function generateOrderId() {
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 8);
-    return `ORDER_${timestamp}_${randomSuffix}`;
-}
-
-function generateCustomerId() {
-    const timestamp = Date.now();
-    const randomSuffix = Math.random().toString(36).substring(2, 6);
-    return `CUST_${timestamp}_${randomSuffix}`;
-}
-
-function validateCustomerData(data) {
-    const { customerName, customerEmail, customerPhone, amount } = data;
     
-    const errors = [];
+    this.app.use(generalLimiter);
     
-    if (!customerName || customerName.trim().length < 2) {
-        errors.push('Customer name must be at least 2 characters');
-    }
+    console.log('✅ Security configuration completed');
+  }
+  
+  // ============================================================================
+  // PHASE 6: MIDDLEWARE SETUP
+  // ============================================================================
+  
+  setupMiddleware() {
+    console.log('🔧 Setting up middleware chain...');
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!customerEmail || !emailRegex.test(customerEmail)) {
-        errors.push('Valid email address is required');
-    }
+    // Body parsing middleware
+    this.app.use(express.json({ 
+      limit: '10mb',
+      verify: (req, res, buf, encoding) => {
+        // Store raw body for webhook signature verification
+        req.rawBody = buf;
+      }
+    }));
     
-    const phoneRegex = /^[6-9]\d{9}$/;
-    if (!customerPhone || !phoneRegex.test(customerPhone)) {
-        errors.push('Valid 10-digit Indian phone number is required');
-    }
+    this.app.use(express.urlencoded({ 
+      extended: true, 
+      limit: '10mb' 
+    }));
     
+    // Custom middleware for payment validation
+    this.app.use('/api/payment/create-order', this.validatePaymentRequest.bind(this));
+    
+    // Webhook-specific middleware
+    this.app.use('/api/payment/webhook', this.webhookMiddleware.bind(this));
+    
+    console.log('✅ Middleware chain configured');
+  }
+  
+  validatePaymentRequest(req, res, next) {
+    // Additional validation for payment requests
+    const { amount, customerName, customerEmail, customerPhone } = req.body;
+    
+    // Amount validation
     const amountNum = parseFloat(amount);
     if (!amount || isNaN(amountNum) || amountNum < 1 || amountNum > 500000) {
-        errors.push('Amount must be between ₹1 and ₹5,00,000');
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid amount',
+        details: 'Amount must be between ₹1 and ₹5,00,000'
+      });
     }
     
-    return errors;
-}
-
-function getCashFreeHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        'x-api-version': '2023-08-01',
-        'x-client-id': process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-    };
-}
-
-// WEBHOOK SIGNATURE VERIFICATION
-function verifySignature(rawBody, signature, timestamp) {
-    const expectedSignature = crypto
-        .createHmac('sha256', process.env.CASHFREE_SECRET_KEY)
-        .update(timestamp + rawBody)
-        .digest('base64');
+    // Name validation
+    if (!customerName || customerName.trim().length < 2 || customerName.trim().length > 50) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid customer name',
+        details: 'Name must be between 2 and 50 characters'
+      });
+    }
     
-    return crypto.timingSafeEqual(
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!customerEmail || !emailRegex.test(customerEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email address',
+        details: 'Please provide a valid email address'
+      });
+    }
+    
+    // Phone validation (Indian numbers)
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!customerPhone || !phoneRegex.test(customerPhone)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number',
+        details: 'Please provide a valid 10-digit Indian phone number'
+      });
+    }
+    
+    next();
+  }
+  
+  webhookMiddleware(req, res, next) {
+    // Webhook-specific security and validation
+    console.log('🔔 Processing webhook request...');
+    
+    // Log webhook for debugging
+    if (this.NODE_ENV !== 'production') {
+      console.log('Webhook Headers:', req.headers);
+      console.log('Webhook Body:', req.body);
+    }
+    
+    // Production webhook signature verification
+    if (this.NODE_ENV === 'production') {
+      const signature = req.headers['x-cashfree-signature'];
+      const timestamp = req.headers['x-cashfree-timestamp'];
+      
+      if (!signature || !timestamp) {
+        console.error('❌ Missing webhook signature or timestamp');
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Missing signature or timestamp' 
+        });
+      }
+      
+      if (!this.verifyWebhookSignature(req.rawBody, signature, timestamp)) {
+        console.error('❌ Invalid webhook signature');
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Invalid signature' 
+        });
+      }
+      
+      console.log('✅ Webhook signature verified');
+    }
+    
+    next();
+  }
+  
+  verifyWebhookSignature(rawBody, signature, timestamp) {
+    const crypto = require('crypto');
+    
+    try {
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.CASHFREE_SECRET_KEY)
+        .update(timestamp + rawBody.toString())
+        .digest('base64');
+      
+      return crypto.timingSafeEqual(
         Buffer.from(signature),
         Buffer.from(expectedSignature)
-    );
+      );
+    } catch (error) {
+      console.error('Signature verification error:', error);
+      return false;
+    }
+  }
+  
+  // ============================================================================
+  // PHASE 7: ROUTE CONFIGURATION
+  // ============================================================================
+  
+  setupRoutes() {
+    console.log('🛣️ Setting up routes...');
+    
+    // Health check endpoint
+    this.app.get('/health', (req, res) => {
+      res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        environment: process.env.CASHFREE_ENVIRONMENT,
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        version: require('./package.json').version
+      });
+    });
+    
+    // API routes
+    this.app.use('/api/payment', paymentRoutes);
+    
+    // Page routes with error handling
+    this.app.get('/', this.servePage('home.html'));
+    this.app.get('/checkout', this.servePage('index.html'));
+    this.app.get('/success', this.servePage('success.html'));
+    this.app.get('/failure', this.servePage('failure.html'));
+    
+    // Static file serving
+    this.app.use(express.static(path.join(__dirname, 'public'), {
+      maxAge: this.NODE_ENV === 'production' ? '1d' : 0,
+      etag: true,
+      lastModified: true
+    }));
+    
+    // 404 handler for undefined routes
+    this.app.use('*', (req, res) => {
+      console.log(`❌ 404 - Route not found: ${req.method} ${req.originalUrl}`);
+      res.status(404).json({
+        success: false,
+        error: 'Route not found',
+        path: req.originalUrl,
+        method: req.method,
+        timestamp: new Date().toISOString()
+      });
+    });
+    
+    console.log('✅ Routes configured');
+  }
+  
+  servePage(filename) {
+    return (req, res) => {
+      const filePath = path.join(__dirname, 'public', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.error(`❌ Page not found: ${filename}`);
+        return res.status(404).json({
+          success: false,
+          error: 'Page not found'
+        });
+      }
+      
+      console.log(`📄 Serving page: ${filename}`);
+      res.sendFile(filePath);
+    };
+  }
+  
+  // ============================================================================
+  // PHASE 8: ERROR HANDLING
+  // ============================================================================
+  
+  setupErrorHandling() {
+    console.log('🚨 Setting up error handling...');
+    
+    // Global error handler
+    this.app.use((err, req, res, next) => {
+      console.error('🚨 Global error handler triggered:', err);
+      
+      // Log detailed error information
+      this.logError(err, req);
+      
+      // Determine error response based on error type
+      let statusCode = 500;
+      let errorMessage = 'Internal server error';
+      
+      if (err.name === 'ValidationError') {
+        statusCode = 400;
+        errorMessage = 'Validation failed';
+      } else if (err.name === 'UnauthorizedError') {
+        statusCode = 401;
+        errorMessage = 'Unauthorized';
+      } else if (err.code === 'ENOTFOUND') {
+        statusCode = 503;
+        errorMessage = 'Service temporarily unavailable';
+      }
+      
+      // Send error response
+      res.status(statusCode).json({
+        success: false,
+        error: errorMessage,
+        ...(this.NODE_ENV !== 'production' && { 
+          details: err.message,
+          stack: err.stack 
+        }),
+        timestamp: new Date().toISOString(),
+        requestId: req.id || 'unknown'
+      });
+    });
+    
+    console.log('✅ Error handling configured');
+  }
+  
+  logError(error, req) {
+    const errorLog = {
+      timestamp: new Date().toISOString(),
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      request: {
+        method: req.method,
+        url: req.url,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        body: req.body
+      }
+    };
+    
+    // Log to console
+    console.error('Error details:', JSON.stringify(errorLog, null, 2));
+    
+    // Log to file in production
+    if (this.NODE_ENV === 'production') {
+      const errorFile = path.join(__dirname, 'logs', 'errors.log');
+      fs.appendFile(errorFile, JSON.stringify(errorLog) + '\n', (err) => {
+        if (err) {
+          console.error('Failed to write error to log file:', err);
+        }
+      });
+    }
+  }
+  
+  // ============================================================================
+  // PHASE 9: SERVER STARTUP
+  // ============================================================================
+  
+  async startServer() {
+    return new Promise((resolve, reject) => {
+      try {
+        this.server = this.app.listen(this.PORT, () => {
+          console.log('');
+          console.log('🎉 ====================================');
+          console.log('🚀   CashFree Server Started!       ');
+          console.log('🎉 ====================================');
+          console.log(`📍 Server URL: http://localhost:${this.PORT}`);
+          console.log(`🌍 Environment: ${process.env.CASHFREE_ENVIRONMENT}`);
+          console.log(`📊 Node Environment: ${this.NODE_ENV}`);
+          console.log(`⚡ Process ID: ${process.pid}`);
+          console.log(`💾 Memory Usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
+          console.log('🎉 ====================================');
+          console.log('');
+          
+          resolve();
+        });
+        
+        this.server.on('error', (error) => {
+          console.error('❌ Server startup error:', error);
+          reject(error);
+        });
+        
+        // Setup graceful shutdown
+        this.setupGracefulShutdown();
+        
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+  
+  // ============================================================================
+  // PHASE 10: GRACEFUL SHUTDOWN
+  // ============================================================================
+  
+  setupGracefulShutdown() {
+    const shutdown = (signal) => {
+      console.log(`\n🛑 Received ${signal}, shutting down gracefully...`);
+      
+      this.server.close(() => {
+        console.log('✅ HTTP server closed');
+        
+        // Close database connections, cleanup resources, etc.
+        this.cleanup()
+          .then(() => {
+            console.log('✅ Cleanup completed');
+            process.exit(0);
+          })
+          .catch((error) => {
+            console.error('❌ Cleanup failed:', error);
+            process.exit(1);
+          });
+      });
+      
+      // Force shutdown after 10 seconds
+      setTimeout(() => {
+        console.error('❌ Could not close connections in time, forcefully shutting down');
+        process.exit(1);
+      }, 10000);
+    };
+    
+    // Listen for shutdown signals
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      console.error('❌ Uncaught Exception:', error);
+      shutdown('UNCAUGHT_EXCEPTION');
+    });
+    
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+      shutdown('UNHANDLED_REJECTION');
+    });
+  }
+  
+  async cleanup() {
+    console.log('🧹 Performing cleanup...');
+    
+    // Add cleanup tasks here:
+    // - Close database connections
+    // - Save pending data
+    // - Clear intervals/timeouts
+    // - Release resources
+    
+    return Promise.resolve();
+  }
 }
 
-// ENDPOINT 1: CREATE ORDER
-router.post('/create-order', async (req, res) => {
-    try {
-        console.log('📝 Creating new order...');
-        
-        // Extract and validate input
-        const { amount, customerName, customerEmail, customerPhone } = req.body;
-        
-        // Validate input data
-        const validationErrors = validateCustomerData(req.body);
-        if (validationErrors.length > 0) {
-            console.log('❌ Validation failed:', validationErrors);
-            return res.status(400).json({
-                success: false,
-                error: 'Validation failed',
-                details: validationErrors
-            });
-        }
-        
-        // Generate unique IDs
-        const orderId = generateOrderId();
-        const customerId = generateCustomerId();
-        
-        console.log(`📋 Order ID: ${orderId}`);
-        console.log(`👤 Customer ID: ${customerId}`);
-        
-        // Prepare order data for CashFree
-        const orderData = {
-            order_id: orderId,
-            order_amount: parseFloat(amount),
-            order_currency: 'INR',
-            customer_details: {
-                customer_id: customerId,
-                customer_name: customerName.trim(),
-                customer_email: customerEmail.trim().toLowerCase(),
-                customer_phone: customerPhone.trim(),
-            },
-            order_meta: {
-                return_url: process.env.RETURN_URL || `http://localhost:${process.env.PORT || 3000}/success?order_id=${orderId}`,
-                notify_url: process.env.NOTIFY_URL || `http://localhost:${process.env.PORT || 3000}/api/payment/webhook`,
-            }
-        };
-        
-        console.log('📤 Sending order to CashFree...');
-        
-        // Make API call to CashFree
-        const response = await axios.post(
-            `${getBaseUrl()}/orders`,
-            orderData,
-            { 
-                headers: getCashFreeHeaders(),
-                timeout: 10000 // 10 second timeout
-            }
-        );
-        
-        console.log('✅ Order created successfully');
-        console.log(`🔑 Payment Session ID: ${response.data.payment_session_id}`);
-        
-        // Store order in our system for tracking
-        const orderRecord = {
-            orderId,
-            customerId,
-            amount: parseFloat(amount),
-            customerName,
-            customerEmail,
-            customerPhone,
-            status: 'CREATED',
-            createdAt: new Date().toISOString(),
-            paymentSessionId: response.data.payment_session_id
-        };
-        
-        // Save to our tracking system
-        creditManager.addOrder(orderRecord);
-        
-        // Return success response
-        res.json({
-            success: true,
-            order_id: orderId,
-            payment_session_id: response.data.payment_session_id,
-            environment: process.env.CASHFREE_ENVIRONMENT,
-            amount: parseFloat(amount)
-        });
-        
-    } catch (error) {
-        console.error('❌ Error creating order:', error.response?.data || error.message);
-        
-        // Handle specific CashFree errors
-        if (error.response?.status === 401) {
-            return res.status(500).json({
-                success: false,
-                error: 'Payment gateway authentication failed. Please try again later.'
-            });
-        }
-        
-        if (error.response?.status === 400) {
-            return res.status(400).json({
-                success: false,
-                error: error.response.data.message || 'Invalid payment data'
-            });
-        }
-        
-        // Generic error response
-        res.status(500).json({
-            success: false,
-            error: 'Failed to create payment order. Please try again.'
-        });
-    }
-});
+// ============================================================================
+// STARTUP
+// ============================================================================
 
-// ENDPOINT 2: GET PAYMENT STATUS
-router.get('/status/:orderId', async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        console.log(`🔍 Checking status for order: ${orderId}`);
-        
-        // Validate order ID format
-        if (!orderId || !orderId.startsWith('ORDER_')) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid order ID format'
-            });
-        }
-        
-        // Get status from CashFree
-        const response = await axios.get(
-            `${getBaseUrl()}/orders/${orderId}`,
-            { 
-                headers: getCashFreeHeaders(),
-                timeout: 8000 
-            }
-        );
-        
-        const orderData = response.data;
-        console.log(`📊 Order status: ${orderData.order_status}`);
-        
-        // Update our local records based on status
-        if (orderData.order_status === 'PAID') {
-            console.log('✅ Payment successful, adding credit...');
-            
-            const paymentData = {
-                orderId: orderData.order_id,
-                transactionId: orderData.cf_order_id,
-                amount: orderData.order_amount,
-                currency: orderData.order_currency,
-                customerName: orderData.customer_details.customer_name,
-                customerEmail: orderData.customer_details.customer_email,
-                status: 'SUCCESS',
-                paidAt: new Date().toISOString()
-            };
-            
-            const totalCredits = creditManager.addCredit(paymentData);
-            
-            return res.json({
-                success: true,
-                status: 'SUCCESS',
-                order_id: orderId,
-                transaction_id: orderData.cf_order_id,
-                amount: orderData.order_amount,
-                total_credits: totalCredits
-            });
-        }
-        
-        if (orderData.order_status === 'CANCELLED' || orderData.order_status === 'EXPIRED') {
-            console.log(`❌ Payment failed: ${orderData.order_status}`);
-            
-            const failureData = {
-                orderId: orderData.order_id,
-                amount: orderData.order_amount,
-                status: 'FAILED',
-                reason: orderData.order_status,
-                failedAt: new Date().toISOString()
-            };
-            
-            creditManager.addFailedPayment(failureData);
-            
-            return res.json({
-                success: false,
-                status: 'FAILED',
-                order_id: orderId,
-                reason: orderData.order_status,
-                amount: orderData.order_amount
-            });
-        }
-        
-        // Payment is still pending
-        console.log('⏳ Payment still pending...');
-        res.json({
-            success: true,
-            status: 'PENDING',
-            order_id: orderId,
-            amount: orderData.order_amount
-        });
-        
-    } catch (error) {
-        console.error('❌ Error checking payment status:', error.response?.data || error.message);
-        
-        if (error.response?.status === 404) {
-            return res.status(404).json({
-                success: false,
-                error: 'Order not found'
-            });
-        }
-        
-        res.status(500).json({
-            success: false,
-            error: 'Failed to check payment status'
-        });
-    }
-});
+// Initialize and start the server
+const server = new CashFreeServer();
 
-// ENDPOINT 3: WEBHOOK HANDLER
-router.post('/webhook', (req, res) => {
-    try {
-        console.log('🔔 Webhook received from CashFree');
-        
-        // Extract headers for signature verification
-        const signature = req.headers['x-cashfree-signature'];
-        const timestamp = req.headers['x-cashfree-timestamp'];
-        
-        // Get raw body for signature verification
-        const rawBody = JSON.stringify(req.body);
-        
-        // Verify webhook signature (CRITICAL for production)
-        if (process.env.NODE_ENV === 'production') {
-            if (!signature || !timestamp) {
-                console.error('❌ Missing signature or timestamp in webhook');
-                return res.status(400).json({ error: 'Missing signature' });
-            }
-            
-            if (!verifySignature(rawBody, signature, timestamp)) {
-                console.error('❌ Invalid webhook signature');
-                return res.status(401).json({ error: 'Invalid signature' });
-            }
-            
-            console.log('✅ Webhook signature verified');
-        }
-        
-        const webhookData = req.body;
-        console.log(`📋 Webhook type: ${webhookData.type}`);
-        console.log(`📋 Order ID: ${webhookData.data.order.order_id}`);
-        
-        // Process payment webhooks
-        if (webhookData.type === 'PAYMENT_SUCCESS_WEBHOOK') {
-            console.log('✅ Processing successful payment webhook');
-            
-            const paymentData = {
-                orderId: webhookData.data.order.order_id,
-                transactionId: webhookData.data.payment.cf_payment_id,
-                amount: webhookData.data.order.order_amount,
-                currency: webhookData.data.order.order_currency,
-                customerName: webhookData.data.customer_details.customer_name,
-                customerEmail: webhookData.data.customer_details.customer_email,
-                paymentMethod: webhookData.data.payment.payment_method,
-                status: 'SUCCESS',
-                paidAt: new Date().toISOString()
-            };
-            
-            creditManager.addCredit(paymentData);
-            console.log('💰 Credit added successfully via webhook');
-        }
-        
-        if (webhookData.type === 'PAYMENT_FAILED_WEBHOOK') {
-            console.log('❌ Processing failed payment webhook');
-            
-            const failureData = {
-                orderId: webhookData.data.order.order_id,
-                amount: webhookData.data.order.order_amount,
-                status: 'FAILED',
-                reason: webhookData.data.payment.payment_message,
-                failedAt: new Date().toISOString()
-            };
-            
-            creditManager.addFailedPayment(failureData);
-            console.log('📝 Failed payment recorded via webhook');
-        }
-        
-        // Always respond with 200 to acknowledge receipt
-        res.status(200).json({ status: 'received' });
-        
-    } catch (error) {
-        console.error('❌ Webhook processing error:', error);
-        res.status(500).json({ error: 'Webhook processing failed' });
-    }
-});
-
-// ENDPOINT 4: GET CREDITS DATA
-router.get('/credits', (req, res) => {
-    try {
-        const creditsData = creditManager.readCredits();
-        res.json({
-            success: true,
-            data: creditsData
-        });
-    } catch (error) {
-        console.error('❌ Error reading credits:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to read credits data'
-        });
-    }
-});
-
-// ENDPOINT 5: GET FAILED PAYMENTS
-router.get('/failed-payments', (req, res) => {
-    try {
-        const creditsData = creditManager.readCredits();
-        res.json({
-            success: true,
-            data: creditsData.failedPayments || []
-        });
-    } catch (error) {
-        console.error('❌ Error reading failed payments:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to read failed payments data'
-        });
-    }
-});
-
-// ENDPOINT 6: RESET CREDITS (TESTING ONLY)
-router.post('/credits/reset', (req, res) => {
-    try {
-        if (process.env.NODE_ENV === 'production') {
-            return res.status(403).json({
-                success: false,
-                error: 'Reset not allowed in production'
-            });
-        }
-        
-        creditManager.resetCredits();
-        console.log('🔄 Credits reset successfully');
-        
-        res.json({
-            success: true,
-            message: 'Credits reset successfully'
-        });
-    } catch (error) {
-        console.error('❌ Error resetting credits:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to reset credits'
-        });
-    }
-});
-
-module.exports = router;
+// Export for testing
+module.exports = server;
 ```
 
-### Credit & Data Management (`creditManager.js`) - Complete Implementation
+### 🔧 Middleware Chain Deep Dive
+
+The middleware chain is critical for proper request processing. Here's the detailed order and purpose:
 
 ```javascript
-// creditManager.js - Data access layer for payment records
+// middleware/index.js - Centralized middleware management
 
-const fs = require('fs');
-const path = require('path');
-
-class CreditManager {
-    constructor() {
-        this.dataDir = path.join(__dirname, 'data');
-        this.filePath = path.join(this.dataDir, 'credits.json');
-        this.initializeDataFile();
+class MiddlewareManager {
+  static setupChain(app) {
+    console.log('🔧 Setting up middleware chain...');
+    
+    // 1. LOGGING (First - to log everything)
+    app.use(this.requestLogger);
+    
+    // 2. SECURITY HEADERS (Early security)
+    app.use(helmet());
+    
+    // 3. CORS (Handle preflight requests)
+    app.use(cors());
+    
+    // 4. RATE LIMITING (Prevent abuse)
+    app.use(this.rateLimiter);
+    
+    // 5. BODY PARSING (Parse request bodies)
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    
+    // 6. VALIDATION (Route-specific validation)
+    app.use('/api/payment/*', this.paymentValidation);
+    
+    // 7. AUTHENTICATION (If required)
+    // app.use('/api/admin/*', this.authMiddleware);
+    
+    // 8. BUSINESS LOGIC ROUTES
+    // Routes are added here
+    
+    // 9. STATIC FILES (After API routes)
+    app.use(express.static('public'));
+    
+    // 10. ERROR HANDLING (Last)
+    app.use(this.errorHandler);
+    
+    console.log('✅ Middleware chain configured');
+  }
+  
+  static requestLogger(req, res, next) {
+    const start = Date.now();
+    
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+      const size = res.get('Content-Length') || 0;
+      
+      console.log(`${req.method} ${req.url} - ${res.statusCode} - ${duration}ms - ${size}bytes`);
+    });
+    
+    next();
+  }
+  
+  static rateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+  
+  static paymentValidation(req, res, next) {
+    // Specific validation for payment endpoints
+    if (req.path.includes('/create-order')) {
+      return this.validateOrderCreation(req, res, next);
     }
     
-    // Initialize data directory and file
-    initializeDataFile() {
-        try {
-            // Create data directory if it doesn't exist
-            if (!fs.existsSync(this.dataDir)) {
-                fs.mkdirSync(this.dataDir, { recursive: true });
-                console.log('📁 Created data directory');
-            }
-            
-            // Create credits file if it doesn't exist
-            if (!fs.existsSync(this.filePath)) {
-                const initialData = {
-                    totalCredits: 0,
-                    payments: [],
-                    failedPayments: [],
-                    orders: [],
-                    lastUpdated: new Date().toISOString(),
-                    version: '1.0'
-                };
-                
-                this.writeCredits(initialData);
-                console.log('📄 Created initial credits file');
-            }
-            
-        } catch (error) {
-            console.error('❌ Error initializing data file:', error);
-            throw new Error('Failed to initialize data storage');
-        }
+    if (req.path.includes('/webhook')) {
+      return this.validateWebhook(req, res, next);
     }
     
-    // Read credits data with error handling
-    readCredits() {
-        try {
-            const data = fs.readFileSync(this.filePath, 'utf8');
-            const parsed = JSON.parse(data);
-            
-            // Ensure all required properties exist
-            const credits = {
-                totalCredits: parsed.totalCredits || 0,
-                payments: parsed.payments || [],
-                failedPayments: parsed.failedPayments || [],
-                orders: parsed.orders || [],
-                lastUpdated: parsed.lastUpdated || new Date().toISOString(),
-                version: parsed.version || '1.0',
-                ...parsed
-            };
-            
-            return credits;
-            
-        } catch (error) {
-            console.error('❌ Error reading credits file:', error);
-            
-            // If file is corrupted, recreate it
-            if (error instanceof SyntaxError) {
-                console.log('🔧 Recreating corrupted credits file...');
-                this.initializeDataFile();
-                return this.readCredits();
-            }
-            
-            throw error;
-        }
+    next();
+  }
+  
+  static validateOrderCreation(req, res, next) {
+    const { amount, customerName, customerEmail, customerPhone } = req.body;
+    const errors = [];
+    
+    // Validate amount
+    if (!amount || isNaN(amount) || amount < 1 || amount > 500000) {
+      errors.push('Amount must be between ₹1 and ₹5,00,000');
     }
     
-    // Write credits data with atomic operation
-    writeCredits(data) {
-        try {
-            // Add metadata
-            data.lastUpdated = new Date().toISOString();
-            data.version = '1.0';
-            
-            // Create temporary file for atomic write
-            const tempPath = this.filePath + '.tmp';
-            const jsonData = JSON.stringify(data, null, 2);
-            
-            // Write to temporary file first
-            fs.writeFileSync(tempPath, jsonData, 'utf8');
-            
-            // Atomically rename to actual file
-            fs.renameSync(tempPath, this.filePath);
-            
-            console.log('💾 Credits data saved successfully');
-            
-        } catch (error) {
-            console.error('❌ Error writing credits file:', error);
-            
-            // Clean up temporary file if it exists
-            const tempPath = this.filePath + '.tmp';
-            if (fs.existsSync(tempPath)) {
-                try {
-                    fs.unlinkSync(tempPath);
-                } catch (cleanupError) {
-                    console.error('⚠️  Failed to cleanup temp file:', cleanupError);
-                }
-            }
-            
-            throw error;
-        }
+    // Validate name
+    if (!customerName || customerName.trim().length < 2) {
+      errors.push('Customer name is required (minimum 2 characters)');
     }
     
-    // Add order record for tracking
-    addOrder(orderData) {
-        try {
-            const credits = this.readCredits();
-            
-            // Check if order already exists
-            const existingOrder = credits.orders.find(o => o.orderId === orderData.orderId);
-            if (existingOrder) {
-                console.log('📋 Order already exists:', orderData.orderId);
-                return;
-            }
-            
-            // Add new order
-            credits.orders.push(orderData);
-            this.writeCredits(credits);
-            
-            console.log(`📝 Order recorded: ${orderData.orderId}`);
-            
-        } catch (error) {
-            console.error('❌ Error adding order:', error);
-            throw error;
-        }
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!customerEmail || !emailRegex.test(customerEmail)) {
+      errors.push('Valid email address is required');
     }
     
-    // Add credit with idempotency protection
-    addCredit(paymentData) {
-        try {
-            const credits = this.readCredits();
-            
-            // CRITICAL: Idempotency check
-            // Prevents duplicate credits for the same payment
-            const existingPayment = credits.payments.find(
-                p => p.orderId === paymentData.orderId
-            );
-            
-            if (existingPayment) {
-                console.log('💰 Payment already credited, skipping:', paymentData.orderId);
-                return credits.totalCredits;
-            }
-            
-            // Create new payment record
-            const newPayment = {
-                id: this.generatePaymentId(),
-                orderId: paymentData.orderId,
-                transactionId: paymentData.transactionId,
-                amount: parseFloat(paymentData.amount),
-                currency: paymentData.currency || 'INR',
-                customerName: paymentData.customerName,
-                customerEmail: paymentData.customerEmail,
-                paymentMethod: paymentData.paymentMethod,
-                status: 'SUCCESS',
-                timestamp: new Date().toISOString(),
-                processedAt: new Date().toISOString()
-            };
-            
-            // Add to payments array
-            credits.payments.push(newPayment);
-            
-            // Update total credits (could be sum of amounts instead of count)
-            credits.totalCredits = credits.payments.length;
-            
-            // Update order status if exists
-            const orderIndex = credits.orders.findIndex(o => o.orderId === paymentData.orderId);
-            if (orderIndex !== -1) {
-                credits.orders[orderIndex].status = 'PAID';
-                credits.orders[orderIndex].paidAt = new Date().toISOString();
-            }
-            
-            // Save to file
-            this.writeCredits(credits);
-            
-            console.log(`✅ Credit added! Order: ${paymentData.orderId}, Total credits: ${credits.totalCredits}`);
-            return credits.totalCredits;
-            
-        } catch (error) {
-            console.error('❌ Error adding credit:', error);
-            throw error;
-        }
+    // Validate phone
+    const phoneRegex = /^[6-9]\d{9}$/;
+    if (!customerPhone || !phoneRegex.test(customerPhone)) {
+      errors.push('Valid 10-digit Indian phone number is required');
     }
     
-    // Add failed payment record
-    addFailedPayment(failureData) {
-        try {
-            const credits = this.readCredits();
-            
-            // Check if failure already recorded
-            const existingFailure = credits.failedPayments.find(
-                f => f.orderId === failureData.orderId
-            );
-            
-            if (existingFailure) {
-                console.log('❌ Failure already recorded:', failureData.orderId);
-                return;
-            }
-            
-            // Create failure record
-            const failureRecord = {
-                id: this.generatePaymentId(),
-                orderId: failureData.orderId,
-                amount: parseFloat(failureData.amount),
-                status: 'FAILED',
-                reason: failureData.reason,
-                timestamp: new Date().toISOString(),
-                failedAt: failureData.failedAt || new Date().toISOString()
-            };
-            
-            // Add to failed payments
-            credits.failedPayments.push(failureRecord);
-            
-            // Update order status if exists
-            const orderIndex = credits.orders.findIndex(o => o.orderId === failureData.orderId);
-            if (orderIndex !== -1) {
-                credits.orders[orderIndex].status = 'FAILED';
-                credits.orders[orderIndex].failedAt = new Date().toISOString();
-                credits.orders[orderIndex].failureReason = failureData.reason;
-            }
-            
-            // Save to file
-            this.writeCredits(credits);
-            
-            console.log(`📝 Failed payment recorded: ${failureData.orderId}`);
-            
-        } catch (error) {
-            console.error('❌ Error recording failed payment:', error);
-            throw error;
-        }
+    if (errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors
+      });
     }
     
-    // Get payment by order ID
-    getPaymentByOrderId(orderId) {
-        try {
-            const credits = this.readCredits();
-            return credits.payments.find(p => p.orderId === orderId);
-        } catch (error) {
-            console.error('❌ Error getting payment:', error);
-            return null;
-        }
+    next();
+  }
+  
+  static validateWebhook(req, res, next) {
+    // Webhook-specific validation
+    const signature = req.headers['x-cashfree-signature'];
+    const timestamp = req.headers['x-cashfree-timestamp'];
+    
+    if (process.env.NODE_ENV === 'production') {
+      if (!signature || !timestamp) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing webhook signature or timestamp'
+        });
+      }
+      
+      // Verify signature (implementation depends on CashFree documentation)
+      // if (!verifyWebhookSignature(req.body, signature, timestamp)) {
+      //   return res.status(401).json({
+      //     success: false,
+      //     error: 'Invalid webhook signature'
+      //   });
+      // }
     }
     
-    // Get order by ID
-    getOrderById(orderId) {
-        try {
-            const credits = this.readCredits();
-            return credits.orders.find(o => o.orderId === orderId);
-        } catch (error) {
-            console.error('❌ Error getting order:', error);
-            return null;
-        }
+    next();
+  }
+  
+  static errorHandler(err, req, res, next) {
+    console.error('Global error handler:', err);
+    
+    // Default error
+    let status = 500;
+    let message = 'Internal server error';
+    
+    // Handle specific error types
+    if (err.name === 'ValidationError') {
+      status = 400;
+      message = 'Validation error';
+    } else if (err.name === 'CastError') {
+      status = 400;
+      message = 'Invalid data format';
+    } else if (err.code === 11000) {
+      status = 409;
+      message = 'Duplicate entry';
     }
     
-    // Reset all data (testing only)
-    resetCredits() {
-        try {
-            if (process.env.NODE_ENV === 'production') {
-                throw new Error('Reset not allowed in production');
-            }
-            
-            const initialData = {
-                totalCredits: 0,
-                payments: [],
-                failedPayments: [],
-                orders: [],
-                lastUpdated: new Date().toISOString(),
-                version: '1.0'
-            };
-            
-            this.writeCredits(initialData);
-            console.log('🔄 All credits data reset');
-            
-        } catch (error) {
-            console.error('❌ Error resetting credits:', error);
-            throw error;
-        }
-    }
-    
-    // Generate unique payment ID
-    generatePaymentId() {
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 8);
-        return `PAY_${timestamp}_${random}`;
-    }
-    
-    // Get statistics
-    getStatistics() {
-        try {
-            const credits = this.readCredits();
-            
-            const totalAmount = credits.payments.reduce((sum, p) => sum + p.amount, 0);
-            const failedAmount = credits.failedPayments.reduce((sum, f) => sum + f.amount, 0);
-            const averageAmount = credits.payments.length > 0 ? totalAmount / credits.payments.length : 0;
-            
-            return {
-                totalPayments: credits.payments.length,
-                totalFailures: credits.failedPayments.length,
-                totalAmount: totalAmount,
-                failedAmount: failedAmount,
-                averageAmount: averageAmount,
-                successRate: credits.payments.length + credits.failedPayments.length > 0 
-                    ? (credits.payments.length / (credits.payments.length + credits.failedPayments.length) * 100).toFixed(2)
-                    : 0
-            };
-        } catch (error) {
-            console.error('❌ Error getting statistics:', error);
-            return null;
-        }
-    }
+    res.status(status).json({
+      success: false,
+      error: message,
+      ...(process.env.NODE_ENV !== 'production' && {
+        details: err.message,
+        stack: err.stack
+      })
+    });
+  }
 }
 
-module.exports = CreditManager;
+module.exports = MiddlewareManager;
 ```
-
-## 7. Frontend Implementation (Line-by-Line)
-
-### Checkout Page (`public/index.html`) - Complete Implementation
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CashFree Checkout Demo</title>
-    <style>
-        /* CSS RESET AND BASE STYLES */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .form-group input.error {
-            border-color: #e74c3c;
-        }
-        
-        .error-message {
-            color: #e74c3c;
-            font-size: 12px;
-            margin-top: 5px;
-            display: none;
-        }
-        
-        .pay-button {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-        }
-        
-        .pay-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .pay-button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .status-message {
-            text-align: center;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 20px;
-            display: none;
-        }
-        
-        .status-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .status-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .status-message.info {
-            background: #cce7ff;
-            color: #004085;
-            border: 1px solid #99d6ff;
-        }
-        
-        .loading-spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ffffff30;
-            border-radius: 50%;
-            border-top-color: #ffffff;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .security-info {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #666;
-            text-align: center;
-        }
-        
-        .amount-display {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .amount-display .currency {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-                margin: 10px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>💳 Secure Checkout</h1>
-            <p>Powered by CashFree Payment Gateway</p>
-        </div>
-        
-        <form id="checkoutForm">
-            <div class="form-group">
-                <label for="amount">Amount (₹)</label>
-                <input 
-                    type="number" 
-                    id="amount" 
-                    name="amount" 
-                    placeholder="Enter amount (e.g., 100)" 
-                    min="1" 
-                    max="500000"
-                    step="0.01"
-                    required
-                >
-                <div class="error-message" id="amount-error">Please enter a valid amount between ₹1 and ₹5,00,000</div>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerName">Full Name</label>
-                <input 
-                    type="text" 
-                    id="customerName" 
-                    name="customerName" 
-                    placeholder="Enter your full name"
-                    maxlength="50"
-                    required
-                >
-                <div class="error-message" id="name-error">Please enter your full name</div>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerEmail">Email Address</label>
-                <input 
-                    type="email" 
-                    id="customerEmail" 
-                    name="customerEmail" 
-                    placeholder="Enter your email address"
-                    maxlength="100"
-                    required
-                >
-                <div class="error-message" id="email-error">Please enter a valid email address</div>
-            </div>
-            
-            <div class="form-group">
-                <label for="customerPhone">Phone Number</label>
-                <input 
-                    type="tel" 
-                    id="customerPhone" 
-                    name="customerPhone" 
-                    placeholder="Enter your 10-digit phone number"
-                    pattern="[6-9][0-9]{9}"
-                    maxlength="10"
-                    required
-                >
-                <div class="error-message" id="phone-error">Please enter a valid 10-digit Indian phone number</div>
-            </div>
-            
-            <button type="submit" class="pay-button" id="payButton">
-                <span id="payButtonText">Pay Securely</span>
-            </button>
-        </form>
-        
-        <div id="statusMessage" class="status-message"></div>
-        
-        <div class="security-info">
-            🔒 Your payment is secured by 256-bit SSL encryption. 
-            We never store your card details.
-        </div>
-    </div>
-
-    <script>
-        // GLOBAL VARIABLES
-        let cashfree = null;
-        let paymentCompleted = false;
-        let statusCheckInterval = null;
-        let currentOrderId = null;
-
-        // DOM ELEMENTS
-        const form = document.getElementById('checkoutForm');
-        const payButton = document.getElementById('payButton');
-        const payButtonText = document.getElementById('payButtonText');
-        const statusMessage = document.getElementById('statusMessage');
-
-        // UTILITY FUNCTIONS
-        function showStatus(message, type = 'info') {
-            statusMessage.textContent = message;
-            statusMessage.className = `status-message ${type}`;
-            statusMessage.style.display = 'block';
-            
-            // Auto-hide success/info messages after 5 seconds
-            if (type === 'success' || type === 'info') {
-                setTimeout(() => {
-                    if (statusMessage.textContent === message) {
-                        hideStatus();
-                    }
-                }, 5000);
-            }
-        }
-
-        function hideStatus() {
-            statusMessage.style.display = 'none';
-        }
-
-        function setButtonLoading(loading) {
-            payButton.disabled = loading;
-            
-            if (loading) {
-                payButtonText.innerHTML = '<span class="loading-spinner"></span>Processing...';
-            } else {
-                payButtonText.textContent = 'Pay Securely';
-            }
-        }
-
-        function setFormDisabled(disabled) {
-            const inputs = form.querySelectorAll('input');
-            inputs.forEach(input => input.disabled = disabled);
-            payButton.disabled = disabled;
-        }
-
-        function validateForm() {
-            let isValid = true;
-            
-            // Clear previous errors
-            document.querySelectorAll('.error-message').forEach(error => {
-                error.style.display = 'none';
-            });
-            document.querySelectorAll('input').forEach(input => {
-                input.classList.remove('error');
-            });
-            
-            // Validate amount
-            const amount = parseFloat(document.getElementById('amount').value);
-            if (!amount || amount < 1 || amount > 500000) {
-                showFieldError('amount', 'amount-error');
-                isValid = false;
-            }
-            
-            // Validate name
-            const name = document.getElementById('customerName').value.trim();
-            if (!name || name.length < 2) {
-                showFieldError('customerName', 'name-error');
-                isValid = false;
-            }
-            
-            // Validate email
-            const email = document.getElementById('customerEmail').value.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email || !emailRegex.test(email)) {
-                showFieldError('customerEmail', 'email-error');
-                isValid = false;
-            }
-            
-            // Validate phone
-            const phone = document.getElementById('customerPhone').value.trim();
-            const phoneRegex = /^[6-9]\d{9}$/;
-            if (!phone || !phoneRegex.test(phone)) {
-                showFieldError('customerPhone', 'phone-error');
-                isValid = false;
-            }
-            
-            return isValid;
-        }
-
-        function showFieldError(fieldId, errorId) {
-            document.getElementById(fieldId).classList.add('error');
-            document.getElementById(errorId).style.display = 'block';
-        }
-
-        // CASHFREE SDK LOADING WITH FALLBACKS
-        (function loadCashFreeSDK() {
-            console.log('🔄 Loading CashFree SDK...');
-            
-            // Multiple SDK sources for resilience
-            const sdkUrls = [
-                'https://sdk.cashfree.com/js/v3/cashfree.js',  // Primary CDN
-                './cashfree-backup.js'                        // Local fallback
-            ];
-            
-            let currentUrlIndex = 0;
-            
-            function tryLoadSDK(url) {
-                return new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
-                    script.src = url;
-                    script.async = true;
-                    
-                    script.onload = () => {
-                        cashfree = window.Cashfree;
-                        console.log('✅ CashFree SDK loaded:', url);
-                        resolve();
-                    };
-                    
-                    script.onerror = () => {
-                        console.warn('⚠️ Failed to load SDK from', url);
-                        currentUrlIndex++;
-                        
-                        if (currentUrlIndex < sdkUrls.length) {
-                            // Try next URL
-                            tryLoadSDK(sdkUrls[currentUrlIndex]).then(resolve).catch(reject);
-                        } else {
-                            reject(new Error('All SDK loading attempts failed'));
-                        }
-                    };
-                    
-                    document.head.appendChild(script);
-                });
-            }
-            
-            // Start loading SDK with fallback
-            tryLoadSDK(sdkUrls[currentUrlIndex])
-                .then(() => {
-                    // SDK loaded, you can initialize payment here if needed
-                })
-                .catch(error => {
-                    console.error('❌ SDK loading error:', error.message);
-                    showStatus('Failed to load payment system. Please try again later.', 'error');
-                });
-        })();
-
-        // FORM SUBMISSION HANDLER
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Validate form fields
-            if (!validateForm()) {
-                showStatus('Please fix the errors in the form', 'error');
-                return;
-            }
-            
-            // Prepare data for order creation
-            const formData = {
-                amount: document.getElementById('amount').value,
-                customerName: document.getElementById('customerName').value,
-                customerEmail: document.getElementById('customerEmail').value,
-                customerPhone: document.getElementById('customerPhone').value
-            };
-            
-            console.log('📋 Order data:', formData);
-            
-            setButtonLoading(true);
-            hideStatus();
-            
-            try {
-                // Step 1: Create order on the server
-                const orderResponse = await axios.post('/api/payment/create-order', formData, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                console.log('✅ Order created:', orderResponse.data);
-                
-                const { order_id, payment_session_id } = orderResponse.data;
-                currentOrderId = order_id;
-                
-                // Step 2: Initialize CashFree payment
-                cashfree.initPayment({
-                    orderId: order_id,
-                    paymentSessionId: payment_session_id,
-                    // onSuccess and onFailure are called by the SDK
-                    onSuccess: async (response) => {
-                        console.log('✅ Payment successful:', response);
-                        paymentCompleted = true;
-                        
-                        // Show success message
-                        showStatus('Payment successful! Redirecting...', 'success');
-                        
-                        // Optionally, you can poll for status or directly redirect
-                        setTimeout(() => {
-                            window.location.href = '/success?order_id=' + order_id;
-                        }, 3000);
-                    },
-                    onFailure: async (response) => {
-                        console.log('❌ Payment failed:', response);
-                        paymentCompleted = true;
-                        
-                        // Log the failure on the server
-                        await axios.post('/api/payment/webhook', response, {
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        // Show failure message
-                        showStatus('Payment failed: ' + response.message, 'error');
-                    },
-                    onClose: () => {
-                        console.log('🛑 Payment popup closed by the user');
-                        if (!paymentCompleted) {
-                            showStatus('Payment was not completed. Please try again.', 'error');
-                        }
-                    }
-                });
-                
-            } catch (error) {
-                console.error('❌ Order creation or payment initialization error:', error);
-                showStatus('Failed to initiate payment. Please try again.', 'error');
-            } finally {
-                setButtonLoading(false);
-            }
-        });
-    </script>
-</body>
-</html>
-```
-
-### Success & Failure Pages
--   **`public/success.html`**: The user lands here after a successful payment. It extracts the `order_id` from the URL, calls `/api/payment/status/:orderId` to get the final transaction details, and displays them to the user for confirmation.
--   **`public/failure.html`**: The user lands here after a failed payment. It extracts the `order_id` and error message from the URL and displays them, providing clear reasons for the failure and suggesting next steps (e.g., "Try again" or "Contact support").
-
-## 7. The Payment Flow: Visualized
-
-### Sequence Diagram
-This diagram shows the interaction between the different components during a payment.
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Frontend (Browser)
-    participant Backend (Your Server)
-    participant CashFree (API)
-
-    User->>Frontend (Browser): Fills form and clicks "Pay"
-    Frontend (Browser)->>Backend (Your Server): POST /api/payment/create-order
-    Backend (Your Server)->>CashFree (API): Create Order (with secrets)
-    CashFree (API)-->>Backend (Your Server): Returns payment_session_id
-    Backend (Your Server)-->>Frontend (Browser): Returns payment_session_id
-
-    Frontend (Browser)->>User: Opens CashFree Popup
-    note right of Frontend (Browser): Polling starts in parallel
-    Frontend (Browser)->>Backend (Your Server): GET /api/payment/status (Poll 1)
-    Backend (Your Server)-->>Frontend (Browser): Status: PENDING
-
-    User->>CashFree (API): Enters payment details
-    CashFree (API)-->>User: Processes payment...
-
-    Frontend (Browser)->>Backend (Your Server): GET /api/payment/status (Poll 2)
-    Backend (Your Server)->>CashFree (API): Get Payment Status
-    CashFree (API)-->>Backend (Your Server): Status: SUCCESS
-    Backend (Your Server)-->>Frontend (Browser): Status: SUCCESS
-
-    note right of Frontend (Browser): Polling detects SUCCESS!
-    Frontend (Browser)->>User: Redirects to success.html
-```
-
-### Step-by-Step Explanation
-1.  **Order Creation**: The flow begins when the user clicks "Pay". The frontend calls the backend, which securely calls CashFree to create an order and gets a `payment_session_id`.
-2.  **Checkout & Polling**: The frontend uses the `payment_session_id` to open the CashFree popup. Simultaneously, it starts a polling loop, asking the backend for the payment status every 2 seconds.
-3.  **Payment Processing**: The user interacts only with the secure CashFree popup to complete the payment.
-4.  **Detection**: The backend's polling request is the first to learn the final status (`SUCCESS` or `FAILED`) from CashFree. It updates its database via `creditManager` and informs the frontend.
-5.  **Redirection**: The frontend, upon receiving the final status from the poll, redirects the user to the appropriate page.
-
-## 8. Core Feature: Fast Failed Payment Detection
-
-### The User Experience Problem
-Without this feature, if a payment fails, the user is stuck looking at a spinner inside the CashFree popup until CashFree's systems time out (which can take up to a minute). The user doesn't know if they should wait, close the window, or try again. This is a major cause of user frustration and abandoned carts.
-
-### The Hybrid Solution: Polling & Callbacks
-This project solves the issue by not waiting for CashFree to tell the browser what happened. It proactively asks.
-
--   **The Race Condition**: The frontend implements a "race" between two detection methods:
-    1.  **Aggressive Polling**: Asks the backend for the status every 2 seconds. This is usually the fastest method for detecting failures.
-    2.  **SDK Callbacks**: Listens for the `onSuccess` and `onFailure` events from the CashFree SDK.
--   **First One Wins**: Whichever method gets a definitive status (`SUCCESS` or `FAILED`) first "wins" the race. A flag (`paymentCompleted`) ensures that once a result is processed, all other subsequent triggers are ignored.
--   **Result**: This hybrid approach provides the speed of polling with the reliability of the official callbacks, ensuring failures are detected in **~3-5 seconds**.
-
-## 9. API Endpoint Reference
-
-| Method | Route                             | Description                                            |
-| ------ | --------------------------------- | ------------------------------------------------------ |
-| `POST` | `/api/payment/create-order`       | Creates a new CashFree payment order.                  |
-| `GET`  | `/api/payment/status/:orderId`    | Fetches the current status of an order.                |
-| `POST` | `/api/payment/webhook`            | Handles asynchronous payment notifications from CashFree. |
-| `GET`  | `/api/payment/credits`            | Retrieves all payment and credit data.                 |
-| `GET`  | `/api/payment/failed-payments`    | Retrieves only the log of failed payments.             |
-| `POST` | `/api/payment/credits/reset`      | **(Testing Only)** Resets all credit data.             |
-
-## 10. Security Best Practices
-
-### Critical: Webhook Verification
-The `routes/payment.js` file includes a `verifySignature` function. **This is currently not used, but it is critical for production security.**
-
--   **Why?**: Without signature verification, anyone could send a fake request to your webhook URL (`/api/payment/webhook`) and potentially give users credit for payments that never happened.
--   **How it works**: CashFree signs each webhook request with your secret key. The signature is sent in the headers. Your backend must recalculate this signature using the raw request body and the timestamp. If your calculated signature matches the one from CashFree, the webhook is authentic.
-
-### Input Validation
-Always validate input on the **backend**, even if you have validation on the frontend. A malicious user can bypass frontend JavaScript and send malformed data to your API. The `create-order` route already performs basic presence checks, which is a good start. For production, you would add more stringent checks (e.g., ensuring `amount` is a valid number).
-
-### Secure Error Handling
-The backend should never send detailed database errors or stack traces to the client in a production environment. The current implementation correctly catches errors and sends a generic, user-friendly error message while logging the detailed error on the server for debugging.
-
-## 11. Troubleshooting Common Issues
-
--   **"CashFree credentials not configured"**: Your `.env` file is missing, not in the root directory, or the `CASHFREE_APP_ID` / `CASHFREE_SECRET_KEY` variables are not set correctly.
--   **Payments work in Sandbox but not Production**: You have likely forgotten to switch `CASHFREE_ENVIRONMENT` to `PRODUCTION` in your `.env` file and update the API keys to your production keys.
--   **401 or 403 Authentication Error from CashFree**: Your API keys are incorrect or you are using sandbox keys for the production environment (or vice-versa).
--   **SDK fails to load**: Check the browser's developer console for network errors. This could be a CDN issue or a local network problem. The fallback loader in this project should mitigate this.
--   **Webhook not working**: Ensure the `NOTIFY_URL` in your `.env` file matches the webhook URL you configured in your CashFree Dashboard. Also, for local testing, your server must be publicly accessible (use a tool like `ngrok`).
-
-## 12. Deployment & Production Considerations
-
-This project is a strong proof-of-concept, but for a real-world production environment, you should make the following changes:
-
-1.  **Use a Real Database**: The `credits.json` file is not suitable for production. It's not scalable, and writing to it on every request can lead to race conditions and data corruption. Replace `creditManager.js` with logic to connect to a proper database like PostgreSQL, MongoDB, or MySQL.
-2.  **Secure Your Webhooks**: Implement the webhook signature verification as described in the security section. This is non-negotiable.
-3.  **Environment Variables**: On your hosting provider (like Heroku, Vercel, or AWS), set the environment variables (`CASHFREE_APP_ID`, etc.) through the provider's secure configuration interface, not by uploading a `.env` file.
-4.  **Disable Reset Route**: The `/api/payment/credits/reset` endpoint is dangerous and should be removed completely or protected behind a strong authentication mechanism in production.
-5.  **Error Monitoring**: Integrate an error monitoring service (like Sentry or LogRocket) to be alerted of any backend or frontend errors that occur in production.

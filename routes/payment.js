@@ -364,6 +364,59 @@ router.post('/process-credit', async (req, res) => {
     }
 });
 
+// Debug route to check and fix credit data
+router.get('/debug-credits', (req, res) => {
+    try {
+        console.log('Debug credits request received');
+        
+        // Read current credits
+        const currentCredits = creditManager.readCredits();
+        console.log('Current credits data:', JSON.stringify(currentCredits));
+        
+        // Fix any issues with the data structure
+        const fixedData = {
+            totalCredits: typeof currentCredits.totalCredits === 'number' ? currentCredits.totalCredits : 0,
+            payments: Array.isArray(currentCredits.payments) ? currentCredits.payments : [],
+            failedPayments: Array.isArray(currentCredits.failedPayments) ? currentCredits.failedPayments : [],
+            creditHistory: Array.isArray(currentCredits.creditHistory) ? currentCredits.creditHistory : []
+        };
+        
+        // Ensure totalCredits matches payments length
+        if (fixedData.payments.length !== fixedData.totalCredits) {
+            console.log(`Fixing totalCredits: ${fixedData.totalCredits} → ${fixedData.payments.length}`);
+            fixedData.totalCredits = fixedData.payments.length;
+        }
+        
+        // Save the fixed data
+        const writeResult = creditManager.writeCredits(fixedData);
+        console.log(`Fixed credits data saved: ${writeResult}`);
+        
+        // Read again to verify
+        const verifiedCredits = creditManager.readCredits();
+        
+        // Set cache control headers
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        
+        res.json({
+            success: true,
+            message: 'Credits data checked and fixed',
+            originalData: currentCredits,
+            fixedData: fixedData,
+            verifiedData: verifiedCredits,
+            isVercel: creditManager.isVercel,
+            environment: process.env.VERCEL ? 'Vercel' : 'Local'
+        });
+    } catch (error) {
+        console.error('Error in debug-credits:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to check/fix credits: ' + (error.message || 'Unknown error')
+        });
+    }
+});
+
 // Test credit route - for debugging only
 router.post('/test-credit', async (req, res) => {
     try {

@@ -10,52 +10,153 @@ let memoryStorage = {
     creditHistory: []
 };
 
-// Simple file path for Vercel's /tmp directory
+// File paths for storage
 const VERCEL_TEMP_FILE = '/tmp/credits-data.json';
+const PROJECT_DB_FILE = path.join(__dirname, 'database.json');
 
 class CreditManager {
     constructor() {
         this.dataFile = path.join(__dirname, 'data', 'credits.json');
         this.isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true';
         
-        console.log(`CreditManager initialized. isVercel: ${this.isVercel}`);
+        console.log(`CreditManager initialized. isVercel: ${this.isVercel}, VERCEL env: ${process.env.VERCEL}`);
+        console.log(`Node version: ${process.version}, Platform: ${process.platform}`);
+        
+        // Initialize memory storage with default values if not already set
+        if (!memoryStorage || typeof memoryStorage !== 'object') {
+            memoryStorage = {
+                totalCredits: 0,
+                payments: [],
+                failedPayments: [],
+                creditHistory: []
+            };
+        }
         
         if (this.isVercel) {
+            console.log(`Using Vercel storage at: ${VERCEL_TEMP_FILE}`);
             this.loadVercelStorage();
+            
+            // Log current memory storage state
+            console.log(`Memory storage after loading: totalCredits=${memoryStorage.totalCredits}, payments=${memoryStorage.payments?.length || 0}, history=${memoryStorage.creditHistory?.length || 0}`);
         } else {
+            console.log(`Using file storage at: ${this.dataFile}`);
             this.ensureDataDirectory();
         }
     }
 
     loadVercelStorage() {
         try {
-            if (fs.existsSync(VERCEL_TEMP_FILE)) {
-                const data = fs.readFileSync(VERCEL_TEMP_FILE, 'utf8');
+            console.log(`Checking for storage files...`);
+            let dataLoaded = false;
+            
+            // First try loading from project database file (more reliable)
+            if (fs.existsSync(PROJECT_DB_FILE)) {
+                console.log(`Project database file exists at: ${PROJECT_DB_FILE}`);
+                
                 try {
-                    const parsed = JSON.parse(data);
-                    memoryStorage = {
-                        totalCredits: parsed.totalCredits || 0,
-                        payments: Array.isArray(parsed.payments) ? parsed.payments : [],
-                        failedPayments: Array.isArray(parsed.failedPayments) ? parsed.failedPayments : [],
-                        creditHistory: Array.isArray(parsed.creditHistory) ? parsed.creditHistory : []
-                    };
-                    console.log(`Loaded ${memoryStorage.payments.length} payments and ${memoryStorage.creditHistory.length} history entries from Vercel temp storage`);
-                } catch (e) {
-                    console.error('Failed to parse Vercel storage, using default values', e);
+                    const projectData = fs.readFileSync(PROJECT_DB_FILE, 'utf8');
+                    const projectParsed = JSON.parse(projectData);
+                    
+                    if (projectParsed && typeof projectParsed === 'object') {
+                        memoryStorage = {
+                            totalCredits: typeof projectParsed.totalCredits === 'number' ? projectParsed.totalCredits : 0,
+                            payments: Array.isArray(projectParsed.payments) ? projectParsed.payments : [],
+                            failedPayments: Array.isArray(projectParsed.failedPayments) ? projectParsed.failedPayments : [],
+                            creditHistory: Array.isArray(projectParsed.creditHistory) ? projectParsed.creditHistory : []
+                        };
+                        
+                        console.log(`Successfully loaded data from project database: ${memoryStorage.totalCredits} credits, ${memoryStorage.payments.length} payments`);
+                        dataLoaded = true;
+                    }
+                } catch (projectError) {
+                    console.error('Error loading from project database file:', projectError);
                 }
-            } else {
-                console.log('No existing Vercel storage found, using default values');
+            }
+            
+            // If project database didn't work, try temp file
+            if (!dataLoaded && fs.existsSync(VERCEL_TEMP_FILE)) {
+                console.log(`Temp storage file exists at: ${VERCEL_TEMP_FILE}`);
+                
+                try {
+                    const stats = fs.statSync(VERCEL_TEMP_FILE);
+                    console.log(`File size: ${stats.size} bytes, Modified: ${stats.mtime}`);
+                    
+                    if (stats.size === 0) {
+                        console.log('File exists but is empty');
+                    } else {
+                        const data = fs.readFileSync(VERCEL_TEMP_FILE, 'utf8');
+                        console.log(`Read ${data.length} characters from temp storage file`);
+                        
+                        try {
+                            const parsed = JSON.parse(data);
+                            
+                            // Validate the parsed data
+                            if (!parsed || typeof parsed !== 'object') {
+                                throw new Error('Invalid data structure: not an object');
+                            }
+                            
+                            memoryStorage = {
+                                totalCredits: typeof parsed.totalCredits === 'number' ? parsed.totalCredits : 0,
+                                payments: Array.isArray(parsed.payments) ? parsed.payments : [],
+                                failedPayments: Array.isArray(parsed.failedPayments) ? parsed.failedPayments : [],
+                                creditHistory: Array.isArray(parsed.creditHistory) ? parsed.creditHistory : []
+                            };
+                            
+                            console.log(`Successfully loaded data from temp file: ${memoryStorage.totalCredits} credits, ${memoryStorage.payments.length} payments`);
+                            dataLoaded = true;
+                        } catch (parseError) {
+                            console.error('Failed to parse temp storage file:', parseError);
+                        }
+                    }
+                } catch (readError) {
+                    console.error('Error reading temp storage file:', readError);
+                }
+            }
+            
+            // If no data was loaded, initialize with default values
+            if (!dataLoaded) {
+                console.log('No valid storage found, initializing with default values');
+                // Save default values to both storage locations
+                this.saveVercelStorage();
             }
         } catch (error) {
-            console.error('Error loading from Vercel storage:', error);
+            console.error('Unexpected error in loadVercelStorage:', error);
         }
     }
 
     saveVercelStorage() {
         try {
-            fs.writeFileSync(VERCEL_TEMP_FILE, JSON.stringify(memoryStorage));
-            console.log(`Saved ${memoryStorage.payments.length} payments and ${memoryStorage.creditHistory.length} history entries to Vercel temp storage`);
-            return true;
+            // Create directory if it doesn't exist
+            const tmpDir = path.dirname(VERCEL_TEMP_FILE);
+            try {
+                if (!fs.existsSync(tmpDir)) {
+                    fs.mkdirSync(tmpDir, { recursive: true });
+                }
+            } catch (dirError) {
+                console.error('Error creating tmp directory:', dirError);
+            }
+            
+            // Validate data before saving
+            const dataToSave = {
+                totalCredits: typeof memoryStorage.totalCredits === 'number' ? memoryStorage.totalCredits : 0,
+                payments: Array.isArray(memoryStorage.payments) ? memoryStorage.payments : [],
+                failedPayments: Array.isArray(memoryStorage.failedPayments) ? memoryStorage.failedPayments : [],
+                creditHistory: Array.isArray(memoryStorage.creditHistory) ? memoryStorage.creditHistory : []
+            };
+            
+            // Write to file
+            const dataString = JSON.stringify(dataToSave, null, 2);
+            fs.writeFileSync(VERCEL_TEMP_FILE, dataString);
+            
+            // Verify the file was written
+            if (fs.existsSync(VERCEL_TEMP_FILE)) {
+                const stats = fs.statSync(VERCEL_TEMP_FILE);
+                console.log(`Saved ${dataToSave.payments.length} payments and ${dataToSave.creditHistory.length} history entries to Vercel temp storage. File size: ${stats.size} bytes`);
+                return true;
+            } else {
+                console.error('File was not created successfully');
+                return false;
+            }
         } catch (error) {
             console.error('Error saving to Vercel storage:', error);
             return false;
@@ -94,11 +195,25 @@ class CreditManager {
     }
 
     writeCredits(data) {
+        // Update memory storage
+        memoryStorage = data;
+        
+        // In Vercel environment, try both storage methods
         if (this.isVercel) {
-            memoryStorage = data;
-            return this.saveVercelStorage();
+            const tempResult = this.saveVercelStorage();
+            
+            // Also try to save to project database file as backup
+            try {
+                fs.writeFileSync(PROJECT_DB_FILE, JSON.stringify(data, null, 2));
+                console.log(`Backup data saved to project database file: ${PROJECT_DB_FILE}`);
+            } catch (projectDbError) {
+                console.error('Error writing to project database file:', projectDbError);
+            }
+            
+            return tempResult;
         }
         
+        // In local environment, use the data file
         try {
             fs.writeFileSync(this.dataFile, JSON.stringify(data, null, 2));
             return true;
